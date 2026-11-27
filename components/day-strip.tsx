@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import { addDays, isSameDay, startOfDay } from "date-fns"
+import { addDays, isSameDay } from "date-fns"
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,7 @@ import {
   startOfJalaliMonth,
   toFa,
 } from "@/lib/jalali"
+import { useLocalDay } from "@/lib/use-local-day"
 
 const WEEKDAY_SHORT_BY_DAY = ["ی", "د", "س", "چ", "پ", "ج", "ش"]
 
@@ -29,10 +30,10 @@ type DayStripProps = {
 }
 
 export function DayStrip({ selected, onSelect, className }: DayStripProps) {
-  const today = useMemo(() => startOfDay(new Date()), [])
-  const [monthStart, setMonthStart] = useState<Date>(() =>
-    startOfJalaliMonth(today)
-  )
+  const today = useLocalDay()
+  const [monthStartOverride, setMonthStartOverride] = useState<Date | null>(null)
+  const monthStart =
+    monthStartOverride ?? startOfJalaliMonth(today)
 
   const monthLength = useMemo(() => jalaliMonthLength(monthStart), [monthStart])
 
@@ -64,17 +65,16 @@ export function DayStrip({ selected, onSelect, className }: DayStripProps) {
   }, [monthStart, selected])
 
   const goNext = () =>
-    setMonthStart(startOfJalaliMonth(addDays(monthStart, monthLength)))
+    setMonthStartOverride(startOfJalaliMonth(addDays(monthStart, monthLength)))
   const goPrev = () =>
-    setMonthStart(startOfJalaliMonth(addDays(monthStart, -1)))
+    setMonthStartOverride(startOfJalaliMonth(addDays(monthStart, -1)))
   const goToday = () => {
-    setMonthStart(startOfJalaliMonth(today))
+    setMonthStartOverride(null)
     onSelect(today)
   }
 
   return (
     <section
-      suppressHydrationWarning
       className={cn(
         "overflow-hidden rounded-lg border bg-card text-card-foreground",
         className

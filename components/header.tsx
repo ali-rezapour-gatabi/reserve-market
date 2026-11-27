@@ -4,10 +4,11 @@ import React from "react"
 import { CalendarDays, Leaf } from "lucide-react"
 import { formatNumericDate } from "@/lib/jalali"
 import { weekdayName } from "@/lib/schedule"
+import { useLocalDay } from "@/lib/use-local-day"
 
 const Header: React.FC = () => {
-  const now = new Date()
-  const persianDate = `${weekdayName(now)}، ${formatNumericDate(now)}`
+  const today = useLocalDay()
+  const persianDate = `${weekdayName(today)}، ${formatNumericDate(today)}`
 
   return (
     <header className="flex items-center justify-between gap-4 rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm shadow-foreground/[0.02] sm:px-6 sm:py-4">
@@ -20,7 +21,7 @@ const Header: React.FC = () => {
           <p className="mt-0.5 text-xs text-muted-foreground">مدیریت هوشمند مرکز شما</p>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2 rounded-xl bg-muted/70 px-3 py-2 text-xs font-medium text-muted-foreground sm:gap-2.5 sm:px-4 sm:text-sm" dir="rtl" suppressHydrationWarning>
+      <div className="flex shrink-0 items-center gap-2 rounded-xl bg-muted/70 px-3 py-2 text-xs font-medium text-muted-foreground sm:gap-2.5 sm:px-4 sm:text-sm" dir="rtl">
         <CalendarDays className="size-4 text-primary" aria-hidden="true" />
         <span>{persianDate}</span>
       </div>

@@ -31,11 +31,8 @@ import {
 } from "@/components/ui/dialog"
 import { toFa, toFaDigits } from "@/lib/jalali"
 import { formatNumericDate, formatNumericDateTime } from "@/lib/jalali"
-import {
-  APPOINTMENT_STATUS_LABELS,
-  startOfToday,
-  weekdayName,
-} from "@/lib/schedule"
+import { useLocalDay } from "@/lib/use-local-day"
+import { APPOINTMENT_STATUS_LABELS, weekdayName } from "@/lib/schedule"
 import {
   completeDayAppointments,
   createBooking,
@@ -66,10 +63,12 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 export default function DashboardPage() {
+  const today = useLocalDay()
   const [currentTime, setCurrentTime] = useState(() => Date.now())
   const [services, setServices] = useState<Service[]>([])
   const [therapists, setTherapists] = useState<Therapist[]>([])
-  const [selectedDay, setSelectedDay] = useState<Date>(() => startOfToday())
+  const [selectedDayOverride, setSelectedDayOverride] = useState<Date | null>(null)
+  const selectedDay = selectedDayOverride ?? today
   const [dayAppointments, setDayAppointments] = useState<AppointmentRow[]>([])
   const [viewing, setViewing] = useState<AppointmentRow | null>(null)
   const [viewingSessions, setViewingSessions] = useState<AppointmentRow[]>([])
@@ -515,7 +514,7 @@ export default function DashboardPage() {
           <div className="pointer-events-none absolute -start-2 -top-14 -z-10 size-44 rounded-full border border-white/10" />
           <div className="relative flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
             <div>
-              <p className="text-xs font-medium text-primary-foreground/75" suppressHydrationWarning>
+              <p className="text-xs font-medium text-primary-foreground/75">
                 {isSameDay(selectedDay, new Date()) ? "امروز" : weekdayName(selectedDay)}
                 <span className="px-1.5">·</span>
                 {formatNumericDate(selectedDay)}
@@ -575,7 +574,7 @@ export default function DashboardPage() {
             </div>
             <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">{toFa(dayAppointments.length)} نوبت</span>
           </div>
-          <DayStrip selected={selectedDay} onSelect={setSelectedDay} />
+          <DayStrip selected={selectedDay} onSelect={setSelectedDayOverride} />
         </section>
 
         <section className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm shadow-foreground/[0.02] sm:p-5">
