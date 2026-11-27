@@ -153,8 +153,13 @@ export function ExportExcelButton() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button type="button" size="sm" variant="outline">
-            <FileSpreadsheet className="size-4" />
+<Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+      >
+        <FileSpreadsheet className="size-4" />
             دریافت خروجی اکسل
           </Button>
         }

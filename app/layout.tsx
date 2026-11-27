@@ -4,8 +4,8 @@ import "./globals.css"
 import { DirectionProvider } from "@/components/ui/direction"
 
 export const metadata: Metadata = {
-  title: "اطلس ماساژ",
-  description: "مدیریت نوبت‌ها و مشتریان سالن ماساژ",
+  title: "اطلس ماساژ | مدیریت مرکز",
+  description: "داشبورد مدیریت نوبت‌ها، مشتریان، خدمات و متخصصان مرکز ماساژ",
 }
 
 export default function RootLayout({

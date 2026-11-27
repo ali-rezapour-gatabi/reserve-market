@@ -35,11 +35,14 @@ export function AppSidebar({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        "flex w-full shrink-0 flex-col gap-2 rounded-lg bg-card p-3 text-card-foreground shadow-sm lg:w-64",
+        "shrink-0 rounded-2xl border border-border/70 bg-card p-2.5 shadow-sm shadow-foreground/[0.02] lg:w-60 lg:p-4",
         className
       )}
     >
-      <nav className="flex flex-col gap-1">
+      <p className="hidden px-3 pb-3 pt-1 text-[11px] font-semibold tracking-wide text-muted-foreground lg:block">
+        فضای کاری
+      </p>
+      <nav aria-label="منوی اصلی" className="flex gap-1 overflow-x-auto lg:flex-col lg:gap-1.5">
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/"
@@ -54,17 +57,15 @@ export function AppSidebar({ className }: { className?: string }) {
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors outline-none",
+                "flex shrink-0 items-center gap-3 rounded-xl px-3.5 py-3 text-sm transition-colors outline-none",
                 "focus-visible:ring-2 focus-visible:ring-ring",
                 isActive
-                  ? "bg-primary font-medium text-primary-foreground"
-                  : "hover:bg-muted"
+                  ? "bg-primary font-semibold text-primary-foreground shadow-sm shadow-primary/15"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
-              <Icon className="size-5 shrink-0" />
-              <span className="flex flex-col leading-tight">
-                <span>{item.label}</span>
-              </span>
+              <Icon className="size-[18px] shrink-0" aria-hidden="true" />
+              <span>{item.label}</span>
             </Link>
           )
         })}

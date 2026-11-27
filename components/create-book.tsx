@@ -90,6 +90,7 @@ type CreateBookProps = {
   onOpenChange?: (open: boolean) => void
   title?: string
   trigger?: React.ReactNode
+  triggerClassName?: string
 }
 
 const QUICK_TIMES = [
@@ -212,6 +213,7 @@ export function CreateBook({
   onOpenChange,
   title = "ثبت نوبت جدید",
   trigger,
+  triggerClassName,
 }: CreateBookProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const isControlled = openProp !== undefined
@@ -431,10 +433,10 @@ export function CreateBook({
       {isControlled ? null : (
         <DialogTrigger
           render={
-            <Button>
-              <CalendarDays className="size-4" />
-              {trigger ?? title}
-            </Button>
+      <Button className={triggerClassName}>
+        <CalendarDays className="size-4" />
+        {trigger ?? title}
+      </Button>
           }
         />
       )}

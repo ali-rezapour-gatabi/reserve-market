@@ -510,88 +510,85 @@ export default function DashboardPage() {
   return (
     <>
       <div className="animate-in space-y-5 duration-500 fade-in-0">
-        <section className="flex flex-col justify-between gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-center">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-              <CalendarDays className="size-5" />
-            </div>
-            <div className="min-w-0">
-              <p
-                className="text-xs font-medium text-muted-foreground"
-                suppressHydrationWarning
-              >
-                {isSameDay(selectedDay, new Date())
-                  ? "امروز"
-                  : weekdayName(selectedDay)}
+        <section className="relative isolate overflow-hidden rounded-2xl bg-primary px-5 py-6 text-primary-foreground shadow-lg shadow-primary/10 sm:px-7 sm:py-7">
+          <div className="pointer-events-none absolute -start-12 -top-24 -z-10 size-64 rounded-full border border-white/10" />
+          <div className="pointer-events-none absolute -start-2 -top-14 -z-10 size-44 rounded-full border border-white/10" />
+          <div className="relative flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
+            <div>
+              <p className="text-xs font-medium text-primary-foreground/75" suppressHydrationWarning>
+                {isSameDay(selectedDay, new Date()) ? "امروز" : weekdayName(selectedDay)}
                 <span className="px-1.5">·</span>
                 {formatNumericDate(selectedDay)}
               </p>
-              <h1 className="mt-0.5 text-xl font-bold sm:text-2xl">
-                مدیریت نوبت‌ها
-              </h1>
+              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">روزتان بخیر</h1>
+              <p className="mt-2 max-w-md text-sm leading-6 text-primary-foreground/80">
+                نمای کلی نوبت‌ها و عملکرد مرکز شما در یک نگاه.
+              </p>
             </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              onClick={bumpRevision}
-              aria-label="نوسازی نوبت‌ها"
-              title="نوسازی نوبت‌ها"
-            >
-              <RefreshCw className="size-4" />
-            </Button>
-            <ExportExcelButton />
-            <CreateBook
-              services={services}
-              therapists={therapists}
-              onCreate={handleCreate}
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                className="border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                onClick={bumpRevision}
+                aria-label="نوسازی نوبت‌ها"
+                title="نوسازی نوبت‌ها"
+              >
+                <RefreshCw className="size-4" />
+              </Button>
+              <ExportExcelButton />
+              <CreateBook
+                services={services}
+                therapists={therapists}
+                onCreate={handleCreate}
+                triggerClassName="bg-white text-primary hover:bg-white/90"
+              />
+            </div>
           </div>
         </section>
 
-        <section
-          aria-label="خلاصه نوبت‌های روز"
-          className="grid grid-cols-2 overflow-hidden rounded-lg border bg-card sm:grid-cols-2 xl:grid-cols-4"
-        >
-          {dayMetrics.map((metric, index) => {
+        <section aria-label="خلاصه نوبت‌های روز" className="grid grid-cols-2 gap-2.5 sm:gap-3 2xl:grid-cols-4">
+          {dayMetrics.map((metric) => {
             const Icon = metric.icon
 
             return (
-              <div
-                key={metric.label}
-                className={`flex min-w-0 items-center gap-3 bg-primary/10 px-3 py-2 sm:px-4 ${index % 2 === 1 ? "border-s" : ""
-                  } ${index >= 2 ? "border-t xl:border-t-0" : ""} ${index > 0 ? "sm:border-t-0 xl:border-s" : ""
-                  }`}
-              >
-                <span
-                  className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${metric.iconTone} ${metric.tone}`}
-                >
-                  <Icon className="size-4.5" />
+              <article key={metric.label} className="flex min-w-0 items-center gap-3.5 rounded-2xl border border-border/70 bg-card p-4 shadow-sm shadow-foreground/[0.02] sm:p-5">
+                <span className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${metric.iconTone} ${metric.tone}`}>
+                  <Icon className="size-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-xs text-muted-foreground">
-                    {metric.label}
-                  </p>
-                  <p
-                    className={`mt-0.5 flex items-center gap-2 truncate text-base font-bold tabular-nums sm:text-lg ${metric.tone}`}
-                  >
-                    {metric.value}
-                    <p className="truncate text-[11px] text-muted-foreground">
-                      {metric.detail}
-                    </p>
-                  </p>
+                  <p className="truncate text-xs text-muted-foreground">{metric.label}</p>
+                  <p className={`mt-1 truncate text-xl font-bold tabular-nums ${metric.tone}`}>{metric.value}</p>
+                  {metric.detail && <p className="mt-0.5 hidden truncate text-[11px] text-muted-foreground sm:block">{metric.detail}</p>}
                 </div>
-              </div>
+              </article>
             )
           })}
         </section>
 
-        <DayStrip selected={selectedDay} onSelect={setSelectedDay} />
+        <section className="rounded-2xl border border-border/70 bg-card p-3 shadow-sm shadow-foreground/[0.02] sm:p-4">
+          <div className="mb-3 flex items-center justify-between gap-3 px-1">
+            <div>
+              <h2 className="text-sm font-bold">برنامه روزانه</h2>
+              <p className="mt-1 text-xs text-muted-foreground">برای مشاهده نوبت‌های هر روز انتخاب کنید</p>
+            </div>
+            <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">{toFa(dayAppointments.length)} نوبت</span>
+          </div>
+          <DayStrip selected={selectedDay} onSelect={setSelectedDay} />
+        </section>
 
-        <section className="space-y-3">
+        <section className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm shadow-foreground/[0.02] sm:p-5">
+          <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+            <div>
+              <h2 className="text-base font-bold">فهرست نوبت‌ها</h2>
+              <p className="mt-1 text-xs text-muted-foreground">مدیریت، جستجو و پیگیری رزروهای روز</p>
+            </div>
+            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="size-2 rounded-full bg-primary" />
+              {pendingCount > 0 ? `${toFa(pendingCount)} نوبت در انتظار` : "همه نوبت‌ها به‌روز هستند"}
+            </span>
+          </div>
           <DataTable
             columns={columns}
             data={dayAppointments}
@@ -612,17 +609,9 @@ export default function DashboardPage() {
                 variant={dayDone ? "default" : "outline"}
                 onClick={handleToggleDayDone}
                 disabled={dayDone ? doneCount === 0 : pendingCount === 0}
-                title={
-                  dayDone
-                    ? "بازگرداندن نوبت‌های این روز به حالت زمان‌بندی‌شده"
-                    : "علامت‌زدن همهٔ نوبت‌های این روز به‌عنوان انجام‌شده"
-                }
+                title={dayDone ? "بازگرداندن نوبت‌های این روز به حالت زمان‌بندی‌شده" : "علامت‌زدن همهٔ نوبت‌های این روز به‌عنوان انجام‌شده"}
               >
-                {dayDone ? (
-                  <Undo2 className="size-4" />
-                ) : (
-                  <Check className="size-4" />
-                )}
+                {dayDone ? <Undo2 className="size-4" /> : <Check className="size-4" />}
                 {dayDone ? "بازگشت به زمان‌بندی" : "پایان کار روز"}
               </Button>
             }
