@@ -31,11 +31,8 @@ import {
 } from "@/components/ui/dialog"
 import { toFa, toFaDigits } from "@/lib/jalali"
 import { formatNumericDate, formatNumericDateTime } from "@/lib/jalali"
-import {
-  APPOINTMENT_STATUS_LABELS,
-  startOfToday,
-  weekdayName,
-} from "@/lib/schedule"
+import { useLocalDay } from "@/lib/use-local-day"
+import { APPOINTMENT_STATUS_LABELS, weekdayName } from "@/lib/schedule"
 import {
   completeDayAppointments,
   createBooking,
@@ -66,10 +63,12 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 export default function DashboardPage() {
+  const today = useLocalDay()
   const [currentTime, setCurrentTime] = useState(() => Date.now())
   const [services, setServices] = useState<Service[]>([])
   const [therapists, setTherapists] = useState<Therapist[]>([])
-  const [selectedDay, setSelectedDay] = useState<Date>(() => startOfToday())
+  const [selectedDayOverride, setSelectedDayOverride] = useState<Date | null>(null)
+  const selectedDay = selectedDayOverride ?? today
   const [dayAppointments, setDayAppointments] = useState<AppointmentRow[]>([])
   const [viewing, setViewing] = useState<AppointmentRow | null>(null)
   const [viewingSessions, setViewingSessions] = useState<AppointmentRow[]>([])
@@ -509,89 +508,81 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div className="animate-in space-y-5 duration-500 fade-in-0">
-        <section className="flex flex-col justify-between gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-center">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-              <CalendarDays className="size-5" />
-            </div>
-            <div className="min-w-0">
-              <p
-                className="text-xs font-medium text-muted-foreground"
-                suppressHydrationWarning
-              >
-                {isSameDay(selectedDay, new Date())
-                  ? "امروز"
-                  : weekdayName(selectedDay)}
+      <div className="animate-in space-y-5 duration-500 fade-in-0 sm:space-y-6">
+        <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+              <p className="text-xs font-medium text-muted-foreground">
+                {isSameDay(selectedDay, new Date()) ? "امروز" : weekdayName(selectedDay)}
                 <span className="px-1.5">·</span>
                 {formatNumericDate(selectedDay)}
               </p>
-              <h1 className="mt-0.5 text-xl font-bold sm:text-2xl">
-                مدیریت نوبت‌ها
-              </h1>
+              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl xl:text-4xl">روزتان بخیر</h1>
+              <p className="mt-1 max-w-md text-sm text-muted-foreground">
+                نمای کلی نوبت‌ها و عملکرد مرکز شما در یک نگاه.
+              </p>
             </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              onClick={bumpRevision}
-              aria-label="نوسازی نوبت‌ها"
-              title="نوسازی نوبت‌ها"
-            >
-              <RefreshCw className="size-4" />
-            </Button>
-            <ExportExcelButton />
-            <CreateBook
-              services={services}
-              therapists={therapists}
-              onCreate={handleCreate}
-            />
-          </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                className="bg-card"
+                onClick={bumpRevision}
+                aria-label="نوسازی نوبت‌ها"
+                title="نوسازی نوبت‌ها"
+              >
+                <RefreshCw className="size-4" />
+              </Button>
+              <ExportExcelButton />
+              <CreateBook
+                services={services}
+                therapists={therapists}
+                onCreate={handleCreate}
+              />
+            </div>
         </section>
 
-        <section
-          aria-label="خلاصه نوبت‌های روز"
-          className="grid grid-cols-2 overflow-hidden rounded-lg border bg-card sm:grid-cols-2 xl:grid-cols-4"
-        >
-          {dayMetrics.map((metric, index) => {
+        <section aria-label="خلاصه نوبت‌های روز" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          {dayMetrics.map((metric) => {
             const Icon = metric.icon
 
             return (
-              <div
-                key={metric.label}
-                className={`flex min-w-0 items-center gap-3 bg-primary/10 px-3 py-2 sm:px-4 ${index % 2 === 1 ? "border-s" : ""
-                  } ${index >= 2 ? "border-t xl:border-t-0" : ""} ${index > 0 ? "sm:border-t-0 xl:border-s" : ""
-                  }`}
-              >
-                <span
-                  className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${metric.iconTone} ${metric.tone}`}
-                >
-                  <Icon className="size-4.5" />
+              <article key={metric.label} className="flex min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card p-3.5 shadow-sm shadow-foreground/[0.02] sm:gap-4 sm:p-5">
+                <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${metric.iconTone} ${metric.tone} sm:size-12`}>
+                  <Icon className="size-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-xs text-muted-foreground">
-                    {metric.label}
-                  </p>
-                  <p
-                    className={`mt-0.5 flex items-center gap-2 truncate text-base font-bold tabular-nums sm:text-lg ${metric.tone}`}
-                  >
-                    {metric.value}
-                    <p className="truncate text-[11px] text-muted-foreground">
-                      {metric.detail}
-                    </p>
-                  </p>
+                  <p className="truncate text-xs text-muted-foreground">{metric.label}</p>
+                  <p className={`mt-1 truncate text-lg font-bold tabular-nums sm:text-xl ${metric.tone}`}>{metric.value}</p>
+                  {metric.detail && <p className="mt-0.5 hidden truncate text-[11px] text-muted-foreground sm:block">{metric.detail}</p>}
                 </div>
-              </div>
+              </article>
             )
           })}
         </section>
 
-        <DayStrip selected={selectedDay} onSelect={setSelectedDay} />
+        <section className="rounded-2xl border border-border/70 bg-card p-3 shadow-sm shadow-foreground/[0.02] sm:p-4">
+          <div className="mb-3 flex items-center justify-between gap-3 px-1">
+            <div>
+              <h2 className="text-sm font-bold">برنامه روزانه</h2>
+              <p className="mt-1 text-xs text-muted-foreground">برای مشاهده نوبت‌های هر روز انتخاب کنید</p>
+            </div>
+            <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">{toFa(dayAppointments.length)} نوبت</span>
+          </div>
+          <DayStrip selected={selectedDay} onSelect={setSelectedDayOverride} />
+        </section>
 
-        <section className="space-y-3">
+        <section className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm shadow-foreground/[0.02] sm:p-5">
+          <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+            <div>
+              <h2 className="text-base font-bold">فهرست نوبت‌ها</h2>
+              <p className="mt-1 text-xs text-muted-foreground">مدیریت، جستجو و پیگیری رزروهای روز</p>
+            </div>
+            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="size-2 rounded-full bg-primary" />
+              {pendingCount > 0 ? `${toFa(pendingCount)} نوبت در انتظار` : "همه نوبت‌ها به‌روز هستند"}
+            </span>
+          </div>
           <DataTable
             columns={columns}
             data={dayAppointments}
@@ -612,17 +603,9 @@ export default function DashboardPage() {
                 variant={dayDone ? "default" : "outline"}
                 onClick={handleToggleDayDone}
                 disabled={dayDone ? doneCount === 0 : pendingCount === 0}
-                title={
-                  dayDone
-                    ? "بازگرداندن نوبت‌های این روز به حالت زمان‌بندی‌شده"
-                    : "علامت‌زدن همهٔ نوبت‌های این روز به‌عنوان انجام‌شده"
-                }
+                title={dayDone ? "بازگرداندن نوبت‌های این روز به حالت زمان‌بندی‌شده" : "علامت‌زدن همهٔ نوبت‌های این روز به‌عنوان انجام‌شده"}
               >
-                {dayDone ? (
-                  <Undo2 className="size-4" />
-                ) : (
-                  <Check className="size-4" />
-                )}
+                {dayDone ? <Undo2 className="size-4" /> : <Check className="size-4" />}
                 {dayDone ? "بازگشت به زمان‌بندی" : "پایان کار روز"}
               </Button>
             }
@@ -640,12 +623,12 @@ export default function DashboardPage() {
           }
         }}
       >
-        <DialogContent dir="rtl" className="sm:max-w-4xl">
+        <DialogContent dir="rtl" className="max-h-[90dvh] w-[calc(100%-1rem)] overflow-y-auto rounded-2xl sm:w-[calc(100%-2rem)] sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">جزئیات نوبت</DialogTitle>
           </DialogHeader>
           {viewing && (
-            <dl className="grid gap-3 sm:grid-cols-3">
+            <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
               {(
                 [
                   ["مشتری", viewing.full_name],
@@ -686,9 +669,9 @@ export default function DashboardPage() {
                   ["یادداشت", viewing.notes || "—"],
                 ] as [string, string][]
               ).map(([label, value]) => (
-                <div key={label} className="min-w-0 rounded-lg bg-muted p-3">
-                  <dt className="text-[12px] text-muted-foreground">{label}</dt>
-                  <dd className="mt-1 text-[12px] font-medium wrap-break-word">
+                <div key={label} className="min-w-0 rounded-xl border border-border/60 bg-muted/50 p-3">
+                  <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+                  <dd className="mt-1 text-sm font-semibold leading-relaxed wrap-break-word">
                     {value}
                   </dd>
                 </div>
