@@ -11,7 +11,7 @@ const Header: React.FC = () => {
   const persianDate = `${weekdayName(today)}، ${formatNumericDate(today)}`
 
   return (
-    <header className="flex items-center justify-between gap-4 rounded-2xl border border-border/70 bg-card px-4 py-3 shadow-sm shadow-foreground/[0.02] sm:px-6 sm:py-4">
+    <header className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card px-3.5 py-3 shadow-sm shadow-foreground/[0.02] sm:gap-4 sm:px-6 sm:py-4">
       <div className="flex min-w-0 items-center gap-3">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
           <Leaf className="size-5" aria-hidden="true" />

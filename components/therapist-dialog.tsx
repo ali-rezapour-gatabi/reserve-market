@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { UsersRound } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -87,19 +88,25 @@ export function TherapistDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir="rtl" className="sm:max-w-lg">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">
-              {initial ? "ویرایش متخصص" : "افزودن متخصص ماساژ"}
-            </DialogTitle>
+      <DialogContent dir="rtl" className="max-h-[90dvh] overflow-y-auto rounded-2xl sm:max-w-lg">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <DialogHeader className="flex-row items-center gap-3">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <UsersRound className="size-5" aria-hidden="true" />
+            </span>
+            <div className="flex flex-col gap-1">
+              <DialogTitle className="text-base font-bold sm:text-lg">
+                {initial ? "ویرایش متخصص" : "افزودن متخصص ماساژ"}
+              </DialogTitle>
+              <p className="text-sm text-muted-foreground">اطلاعات حرفه‌ای و راه ارتباطی متخصص را ثبت کنید.</p>
+            </div>
           </DialogHeader>
 
           <Separator />
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="therapist-name">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="therapist-name" className="text-sm font-medium text-foreground/80">
                 نام و نام خانوادگی<span className="text-destructive"> *</span>
               </Label>
               <Input
@@ -108,10 +115,11 @@ export function TherapistDialog({
                 value={form.name}
                 onChange={(event) => update("name", event.target.value)}
                 maxLength={150}
+                className="h-11 rounded-xl"
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="therapist-specialty">تخصص</Label>
               <Input
                 id="therapist-specialty"
@@ -122,7 +130,7 @@ export function TherapistDialog({
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="therapist-phone">شماره تماس</Label>
               <PersianNumberInput
                 id="therapist-phone"
@@ -130,11 +138,11 @@ export function TherapistDialog({
                 value={form.phone}
                 onValueChange={(value) => update("phone", value)}
                 maxLength={11}
-                className="text-[15px]"
+                className="h-11 rounded-xl text-[15px]"
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="therapist-description">توضیحات</Label>
               <Textarea
                 id="therapist-description"
@@ -143,6 +151,7 @@ export function TherapistDialog({
                 onChange={(event) => update("description", event.target.value)}
                 rows={2}
                 maxLength={300}
+                className="min-h-24 resize-none rounded-xl"
               />
             </div>
 
@@ -160,7 +169,7 @@ export function TherapistDialog({
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 sm:flex-none"
+              className="h-11 flex-1 py-3 sm:flex-none"
             >
               {loading ? "در حال ذخیره..." : "ذخیره"}
             </Button>
@@ -169,6 +178,7 @@ export function TherapistDialog({
               variant="outline"
               disabled={loading}
               onClick={() => onOpenChange(false)}
+              className="h-11 flex-1 py-3 sm:flex-none"
             >
               انصراف
             </Button>

@@ -35,7 +35,7 @@ export function AppSidebar({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        "shrink-0 rounded-2xl border border-border/70 bg-card p-2.5 shadow-sm shadow-foreground/[0.02] lg:w-60 lg:p-4",
+        "shrink-0 rounded-2xl border border-border/70 bg-card p-2 shadow-sm shadow-foreground/[0.02] sm:p-2.5 lg:w-60 lg:p-4",
         className
       )}
     >

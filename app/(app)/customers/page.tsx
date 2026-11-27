@@ -292,10 +292,11 @@ export default function CustomersPage() {
   ).length
 
   return (
-    <>
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-card p-4 text-card-foreground shadow-sm">
+      <>
+      <div className="space-y-5">
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card p-4 text-card-foreground shadow-sm shadow-foreground/[0.02] sm:p-5">
         <div>
-          <h2 className="font-semibold">مشتریان</h2>
+          <h1 className="text-lg font-bold sm:text-xl">مشتریان</h1>
           <p className="text-sm text-muted-foreground">
             {toFa(customers.length)} مشتری ثبت‌شده
           </p>
@@ -335,15 +336,16 @@ export default function CustomersPage() {
         pageSize={10}
         onRowClick={openDetails}
       />
+      </div>
 
       <Dialog open={selectedCustomer !== null} onOpenChange={closeDetails}>
         <DialogContent
           dir="rtl"
-          className="max-h-[85vh] overflow-y-auto sm:max-w-3xl"
+          className="max-h-[90dvh] w-[calc(100%-1rem)] overflow-y-auto rounded-2xl sm:w-[calc(100%-2rem)] sm:max-w-3xl"
         >
           {selectedCustomer && (
             <>
-              <DialogHeader className="flex-row items-center justify-between gap-3">
+              <DialogHeader className="flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                 <DialogTitle className="text-lg font-bold">
                   {editingCustomer
                     ? "ویرایش اطلاعات مشتری"

@@ -173,9 +173,11 @@ export default function ServicesPage() {
 
   return (
     <>
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-card p-4 text-card-foreground shadow-sm">
+      <div className="space-y-5">
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card p-4 text-card-foreground shadow-sm shadow-foreground/[0.02] sm:p-5">
         <div>
-          <h2 className="font-semibold">سرویس‌ها</h2>
+          <h1 className="text-lg font-bold sm:text-xl">خدمات</h1>
+          <p className="mt-1 text-sm text-muted-foreground">مدیریت خدمات، مدت‌زمان و قیمت هر جلسه</p>
         </div>
 
         <Button type="button" size="sm" onClick={openCreate}>
@@ -214,6 +216,7 @@ export default function ServicesPage() {
         emptyMessage="هنوز خدمتی اضافه نکرده‌اید."
         pageSize={10}
       />
+      </div>
 
       <ServiceDialog
         key={`${dialogOpen ? "open" : "closed"}-${editing?.id ?? "new"}`}

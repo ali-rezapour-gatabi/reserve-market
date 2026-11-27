@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { Sparkles } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -95,19 +96,25 @@ export function ServiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir="rtl" className="sm:max-w-lg">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">
-              {initial ? "ویرایش خدمت" : "افزودن خدمت جدید"}
-            </DialogTitle>
+      <DialogContent dir="rtl" className="max-h-[90dvh] overflow-y-auto rounded-2xl sm:max-w-lg">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <DialogHeader className="flex-row items-center gap-3">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Sparkles className="size-5" aria-hidden="true" />
+            </span>
+            <div className="flex flex-col gap-1">
+              <DialogTitle className="text-base font-bold sm:text-lg">
+                {initial ? "ویرایش خدمت" : "افزودن خدمت جدید"}
+              </DialogTitle>
+              <p className="text-sm text-muted-foreground">مشخصات و هزینه خدمت را وارد کنید.</p>
+            </div>
           </DialogHeader>
 
           <Separator />
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="service-name">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="service-name" className="text-sm font-medium text-foreground/80">
                 نام خدمت<span className="text-destructive"> *</span>
               </Label>
               <Input
@@ -116,10 +123,11 @@ export function ServiceDialog({
                 value={form.name}
                 onChange={(event) => update("name", event.target.value)}
                 maxLength={150}
+                className="h-11 rounded-xl"
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="service-description">توضیحات</Label>
               <Textarea
                 id="service-description"
@@ -128,11 +136,12 @@ export function ServiceDialog({
                 onChange={(event) => update("description", event.target.value)}
                 rows={2}
                 maxLength={300}
+                className="min-h-24 resize-none rounded-xl"
               />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="service-duration">
                   مدت زمان (دقیقه)<span className="text-destructive"> *</span>
                 </Label>
@@ -141,10 +150,11 @@ export function ServiceDialog({
                   min={1}
                   value={form.durationMinutes}
                   onValueChange={(value) => update("durationMinutes", value)}
+                  className="h-11 rounded-xl"
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="service-price">
                   قیمت (تومان)<span className="text-destructive"> *</span>
                 </Label>
@@ -152,6 +162,7 @@ export function ServiceDialog({
                   id="service-price"
                   value={form.price}
                   onValueChange={(value) => update("price", value)}
+                  className="h-11 rounded-xl"
                 />
               </div>
             </div>
@@ -166,8 +177,8 @@ export function ServiceDialog({
             )}
           </div>
 
-          <DialogFooter>
-            <Button type="submit" disabled={loading} className="flex-1">
+          <DialogFooter className="gap-2 pt-1">
+            <Button type="submit" disabled={loading} className="h-11 flex-1 py-3">
               {loading ? "در حال ذخیره..." : "ذخیره"}
             </Button>
             <Button
@@ -175,6 +186,7 @@ export function ServiceDialog({
               variant="outline"
               disabled={loading}
               onClick={() => onOpenChange(false)}
+              className="h-11 flex-1 py-3 sm:flex-none"
             >
               انصراف
             </Button>

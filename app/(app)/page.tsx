@@ -508,8 +508,8 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div className="animate-in space-y-5 duration-500 fade-in-0">
-        <section className="relative isolate overflow-hidden rounded-2xl bg-primary px-5 py-6 text-primary-foreground shadow-lg shadow-primary/10 sm:px-7 sm:py-7">
+      <div className="animate-in space-y-5 duration-500 fade-in-0 sm:space-y-6">
+        <section className="relative isolate overflow-hidden rounded-3xl bg-primary px-5 py-5 text-primary-foreground shadow-lg shadow-primary/10 sm:px-8 sm:py-8">
           <div className="pointer-events-none absolute -start-12 -top-24 -z-10 size-64 rounded-full border border-white/10" />
           <div className="pointer-events-none absolute -start-2 -top-14 -z-10 size-44 rounded-full border border-white/10" />
           <div className="relative flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
@@ -519,7 +519,7 @@ export default function DashboardPage() {
                 <span className="px-1.5">·</span>
                 {formatNumericDate(selectedDay)}
               </p>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">روزتان بخیر</h1>
+              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl xl:text-4xl">روزتان بخیر</h1>
               <p className="mt-2 max-w-md text-sm leading-6 text-primary-foreground/80">
                 نمای کلی نوبت‌ها و عملکرد مرکز شما در یک نگاه.
               </p>
@@ -547,18 +547,18 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section aria-label="خلاصه نوبت‌های روز" className="grid grid-cols-2 gap-2.5 sm:gap-3 2xl:grid-cols-4">
+        <section aria-label="خلاصه نوبت‌های روز" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           {dayMetrics.map((metric) => {
             const Icon = metric.icon
 
             return (
-              <article key={metric.label} className="flex min-w-0 items-center gap-3.5 rounded-2xl border border-border/70 bg-card p-4 shadow-sm shadow-foreground/[0.02] sm:p-5">
-                <span className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${metric.iconTone} ${metric.tone}`}>
+              <article key={metric.label} className="flex min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card p-3.5 shadow-sm shadow-foreground/[0.02] sm:gap-4 sm:p-5">
+                <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${metric.iconTone} ${metric.tone} sm:size-12`}>
                   <Icon className="size-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
                   <p className="truncate text-xs text-muted-foreground">{metric.label}</p>
-                  <p className={`mt-1 truncate text-xl font-bold tabular-nums ${metric.tone}`}>{metric.value}</p>
+                  <p className={`mt-1 truncate text-lg font-bold tabular-nums sm:text-xl ${metric.tone}`}>{metric.value}</p>
                   {metric.detail && <p className="mt-0.5 hidden truncate text-[11px] text-muted-foreground sm:block">{metric.detail}</p>}
                 </div>
               </article>
@@ -628,12 +628,12 @@ export default function DashboardPage() {
           }
         }}
       >
-        <DialogContent dir="rtl" className="sm:max-w-4xl">
+        <DialogContent dir="rtl" className="max-h-[90dvh] w-[calc(100%-1rem)] overflow-y-auto rounded-2xl sm:w-[calc(100%-2rem)] sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">جزئیات نوبت</DialogTitle>
           </DialogHeader>
           {viewing && (
-            <dl className="grid gap-3 sm:grid-cols-3">
+            <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
               {(
                 [
                   ["مشتری", viewing.full_name],
@@ -674,9 +674,9 @@ export default function DashboardPage() {
                   ["یادداشت", viewing.notes || "—"],
                 ] as [string, string][]
               ).map(([label, value]) => (
-                <div key={label} className="min-w-0 rounded-lg bg-muted p-3">
-                  <dt className="text-[12px] text-muted-foreground">{label}</dt>
-                  <dd className="mt-1 text-[12px] font-medium wrap-break-word">
+                <div key={label} className="min-w-0 rounded-xl border border-border/60 bg-muted/50 p-3">
+                  <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
+                  <dd className="mt-1 text-sm font-semibold leading-relaxed wrap-break-word">
                     {value}
                   </dd>
                 </div>

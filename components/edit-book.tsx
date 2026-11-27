@@ -74,7 +74,7 @@ export const QUICK_TIMES = [
   "21:00",
   "22:30",
 ]
-const inputClass = "h-11 rounded-lg bg-background"
+const inputClass = "h-11 rounded-xl bg-background"
 
 function pad2(value: number) {
   return String(value).padStart(2, "0")
@@ -152,13 +152,13 @@ function Panel({
   children: React.ReactNode
 }) {
   return (
-    <section className="space-y-4 rounded-lg border bg-card p-4 sm:p-5">
+    <section className="flex flex-col gap-4 rounded-2xl border border-border/70 bg-card p-4 shadow-sm shadow-foreground/[0.02] sm:p-5">
       <header className="flex items-center gap-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <Icon className="size-4" />
         </span>
         <div className="min-w-0">
-          <h3 className="text-[15px] leading-tight font-semibold">{title}</h3>
+          <h3 className="text-sm font-bold leading-tight sm:text-base">{title}</h3>
           {hint && (
             <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
           )}
@@ -179,8 +179,8 @@ function Field({
   children: React.ReactNode
 }) {
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={htmlFor} className="text-[13px] text-muted-foreground">
+    <div className="flex flex-col gap-2">
+      <Label htmlFor={htmlFor} className="text-sm font-medium text-foreground/80">
         {label}
       </Label>
       {children}
@@ -363,16 +363,16 @@ export function EditBook({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         dir="rtl"
-        className="max-h-[92vh] w-[calc(100%-2rem)] translate-x-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-6xl"
+        className="max-h-[94dvh] w-[calc(100%-1rem)] translate-x-0 flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:w-[calc(100%-2rem)] md:max-w-5xl xl:max-w-6xl"
       >
         {appointment !== null && form !== null && (
           <form
             onSubmit={handleSubmit}
             className="flex min-h-0 flex-1 flex-col"
           >
-            <DialogHeader className="shrink-0 flex-col gap-4 p-3 text-right sm:flex-row sm:items-center sm:justify-between">
+            <DialogHeader className="shrink-0 flex-col gap-4 p-4 text-right sm:flex-row sm:items-center sm:justify-between sm:p-6">
               <div className="flex items-center gap-3">
-                <div className="flex size-11 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
                   <CalendarDays className="size-5" />
                 </div>
                 <div className="space-y-0.5">
@@ -409,8 +409,8 @@ export function EditBook({
 
             <Separator />
 
-            <div className="max-h-[72vh] min-h-0 flex-1 overflow-y-auto bg-muted/30 p-4 sm:p-6">
-              <div className="grid gap-4 lg:grid-cols-2 lg:gap-5">
+            <div className="max-h-[72dvh] min-h-0 flex-1 overflow-y-auto bg-muted/20 p-3 sm:p-6">
+              <div className="grid gap-3 sm:gap-4 lg:grid-cols-2 lg:gap-5">
                 <div className="space-y-4 lg:space-y-5">
                   <Panel
                     icon={Clock}

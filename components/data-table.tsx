@@ -150,7 +150,7 @@ export function DataTable<TData>({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 sm:space-y-5">
       {(enableSearch || toolbar) && (
         <div className="flex flex-wrap items-center justify-between gap-3">
           {enableSearch && (
@@ -162,14 +162,14 @@ export function DataTable<TData>({
               }}
               placeholder={searchPlaceholder}
               dir="rtl"
-              className="h-11 w-full max-w-xs rounded-lg border border-transparent bg-input/50 px-3 text-sm transition-[color,box-shadow,background-color] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+              className="h-11 w-full max-w-xs rounded-xl border border-border/70 bg-background px-3 text-sm transition-[color,box-shadow,background-color] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
             />
           )}
           {toolbar && <div className="flex items-center gap-2">{toolbar}</div>}
         </div>
       )}
 
-      <div className="rounded-lg border bg-card shadow-sm">
+      <div className="rounded-2xl border border-border/70 bg-card shadow-sm shadow-foreground/[0.02]">
         <Table>
           <TableHeader>
             <TableRow>

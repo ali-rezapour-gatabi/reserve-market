@@ -160,14 +160,14 @@ function Panel({
 }) {
   return (
     <section
-      className={cn("space-y-4 rounded-lg border bg-card p-3", className)}
+      className={cn("flex flex-col gap-4 rounded-2xl border border-border/70 bg-card p-4 shadow-sm shadow-foreground/[0.02] sm:p-5", className)}
     >
       <header className="flex items-center gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <Icon className="size-4.5" />
         </span>
         <div className="min-w-0">
-          <h3 className="text-[15px] leading-tight font-semibold">{title}</h3>
+          <h3 className="text-sm font-bold leading-tight sm:text-base">{title}</h3>
           {hint && (
             <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
           )}
@@ -192,8 +192,8 @@ function Field({
   className?: string
 }) {
   return (
-    <div className={cn("space-y-1.5", className)}>
-      <Label htmlFor={htmlFor} className="text-[13px] text-muted-foreground">
+    <div className={cn("flex flex-col gap-2", className)}>
+      <Label htmlFor={htmlFor} className="text-sm font-medium text-foreground/80">
         {label}
         {required && <span className="text-destructive"> *</span>}
       </Label>
@@ -202,7 +202,7 @@ function Field({
   )
 }
 
-const inputClass = "h-11 rounded-lg bg-background text-center"
+const inputClass = "h-11 rounded-xl bg-background text-center"
 
 export function CreateBook({
   services,
@@ -443,14 +443,14 @@ export function CreateBook({
 
       <DialogContent
         dir="rtl"
-        className="max-h-[92vh] w-[calc(100%-2rem)] translate-x-0 flex-col gap-0 overflow-y-auto p-0 sm:max-w-7xl"
+        className="max-h-[94dvh] w-[calc(100%-1rem)] translate-x-0 flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:w-[calc(100%-2rem)] md:max-w-5xl xl:max-w-6xl"
       >
         <form
           onSubmit={handleSubmit}
-          className="flex max-h-[92vh] min-h-0 flex-1 flex-col overflow-y-auto"
+          className="flex max-h-[94dvh] min-h-0 flex-1 flex-col overflow-y-auto"
         >
-          <DialogHeader className="shrink-0 flex-row items-center gap-3 p-5 text-right sm:p-6">
-            <div className="flex size-11 items-center justify-center bg-primary text-primary-foreground">
+          <DialogHeader className="shrink-0 flex-row items-center gap-3 p-4 text-right sm:p-6">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
               <CalendarDays className="size-5" />
             </div>
             <div className="space-y-0.5">
@@ -465,8 +465,8 @@ export function CreateBook({
 
           <Separator />
 
-          <div className="min-h-0 flex-1 overflow-y-auto bg-muted/30 p-4 sm:p-6">
-            <div className="grid gap-4 lg:grid-cols-2 lg:gap-5">
+          <div className="min-h-0 flex-1 overflow-y-auto bg-muted/20 p-3 sm:p-6">
+            <div className="grid gap-3 sm:gap-4 lg:grid-cols-2 lg:gap-5">
               <div className="space-y-4 lg:space-y-5">
                 <Panel icon={User} title="اطلاعات مشتری">
                   <Field
