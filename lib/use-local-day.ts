@@ -1,6 +1,6 @@
 "use client"
 
-import { useSyncExternalStore } from "react"
+import { useMemo, useSyncExternalStore } from "react"
 
 const SERVER_DAY = 20000101
 
@@ -24,9 +24,11 @@ export function useLocalDay() {
     () => SERVER_DAY
   )
 
-  const year = Math.floor(dayKey / 10_000)
-  const month = Math.floor((dayKey % 10_000) / 100)
-  const day = dayKey % 100
+  return useMemo(() => {
+    const year = Math.floor(dayKey / 10_000)
+    const month = Math.floor((dayKey % 10_000) / 100)
+    const day = dayKey % 100
 
-  return new Date(year, month - 1, day)
+    return new Date(year, month - 1, day)
+  }, [dayKey])
 }

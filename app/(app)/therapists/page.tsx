@@ -6,7 +6,7 @@ import { Pencil, Plus, Trash2, ToggleLeft, ToggleRight } from "lucide-react"
 import { DataTable, type DataTableColumn } from "@/components/data-table"
 import { TherapistDialog } from "@/components/therapist-dialog"
 import { Button } from "@/components/ui/button"
-import { toFa } from "@/lib/jalali"
+import { useToast } from "@/components/ui/toast"
 import {
   createTherapist,
   deleteTherapist,
@@ -16,24 +16,21 @@ import {
 } from "@/lib/repositories"
 import type { Therapist, TherapistInput } from "@/lib/repositories"
 
-type Feedback = { kind: "success" | "error"; text: string }
-
 export default function TherapistsPage() {
+  const toast = useToast()
   const [therapists, setTherapists] = useState<Therapist[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Therapist | null>(null)
-  const [feedback, setFeedback] = useState<Feedback | null>(null)
 
   const load = useCallback(() => {
     listAllTherapists()
       .then(setTherapists)
       .catch((error) =>
-        setFeedback({
-          kind: "error",
-          text: error instanceof Error ? error.message : "خطای ناشناخته",
-        })
+        toast.error(
+          error instanceof Error ? error.message : "خطای ناشناخته"
+        )
       )
-  }, [])
+  }, [toast])
 
   useEffect(() => {
     load()
@@ -55,10 +52,7 @@ export default function TherapistsPage() {
       : await createTherapist(input)
 
     setTherapists(rows)
-    setFeedback({
-      kind: "success",
-      text: editing ? "متخصص ویرایش شد." : "متخصص اضافه شد.",
-    })
+    toast.success(editing ? "متخصص ویرایش شد." : "متخصص اضافه شد.")
     setEditing(null)
   }
 
@@ -70,10 +64,9 @@ export default function TherapistsPage() {
       )
       setTherapists(rows)
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        text: error instanceof Error ? error.message : "تغییر وضعیت ناموفق بود",
-      })
+      toast.error(
+        error instanceof Error ? error.message : "تغییر وضعیت ناموفق بود"
+      )
     }
   }
 
@@ -81,12 +74,11 @@ export default function TherapistsPage() {
     try {
       const rows = await deleteTherapist(therapist.id)
       setTherapists(rows)
-      setFeedback({ kind: "success", text: "متخصص حذف شد." })
+      toast.success("متخصص حذف شد.")
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        text: error instanceof Error ? error.message : "حذف متخصص ناموفق بود",
-      })
+      toast.error(
+        error instanceof Error ? error.message : "حذف متخصص ناموفق بود"
+      )
     }
   }
 
@@ -187,52 +179,23 @@ export default function TherapistsPage() {
   return (
     <>
       <div className="space-y-5">
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card p-4 text-card-foreground shadow-sm shadow-foreground/[0.02] sm:p-5">
-        <div>
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card p-4 text-card-foreground shadow-sm shadow-foreground/[0.02] sm:p-5">
           <h1 className="text-lg font-bold sm:text-xl">متخصصان ماساژ</h1>
-          <p className="text-sm text-muted-foreground">
-            {therapists.length === 0
-              ? "هنوز متخصصی ثبت نشده است"
-              : `${toFa(therapists.length)} متخصص ثبت‌شده`}
-          </p>
-        </div>
-
-        <Button type="button" size="sm" onClick={openCreate}>
-          <Plus className="size-4" />
-          افزودن متخصص
-        </Button>
-      </section>
-
-      {feedback && (
-        <div
-          role={feedback.kind === "error" ? "alert" : "status"}
-          className={
-            feedback.kind === "error"
-              ? "flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
-              : "flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3 text-sm text-primary"
-          }
-        >
-          <span>{feedback.text}</span>
-          <Button
-            type="button"
-            size="xs"
-            variant="ghost"
-            onClick={() => setFeedback(null)}
-          >
-            بستن
+          <Button type="button" size="sm" onClick={openCreate}>
+            <Plus className="size-4" />
+            افزودن متخصص
           </Button>
-        </div>
-      )}
+        </section>
 
-      <DataTable
-        columns={columns}
-        data={therapists}
-        getRowId={(row) => row.id}
-        initialSort={{ key: "name", dir: "asc" }}
-        searchPlaceholder="جستجوی متخصص..."
-        emptyMessage="هنوز متخصصی اضافه نکرده‌اید."
-        pageSize={10}
-      />
+        <DataTable
+          columns={columns}
+          data={therapists}
+          getRowId={(row) => row.id}
+          initialSort={{ key: "name", dir: "asc" }}
+          searchPlaceholder="جستجوی متخصص..."
+          emptyMessage="هنوز متخصصی اضافه نکرده‌اید."
+          pageSize={10}
+        />
       </div>
 
       <TherapistDialog

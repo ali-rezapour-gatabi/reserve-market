@@ -52,14 +52,14 @@ export function AppSidebar({ className }: { className?: string }) {
             aria-current={isActive ? "page" : undefined}
             onClick={() => mobile && setMobileOpen(false)}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors outline-none",
+              "flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm transition-colors outline-none",
               "focus-visible:ring-2 focus-visible:ring-ring",
               isActive
                 ? "bg-muted font-medium text-foreground"
                 : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
             )}
           >
-            <Icon className="size-[18px] shrink-0" aria-hidden="true" />
+            <Icon className="size-4.5 shrink-0" aria-hidden="true" />
             <span>{item.label}</span>
           </Link>
         )
@@ -69,16 +69,12 @@ export function AppSidebar({ className }: { className?: string }) {
 
   return (
     <aside
-      className={cn(
-        "shrink-0 border-b border-border bg-card px-3 py-2 lg:border-b-0",
-        className
-      )}
+      className={cn("shrink-0 border-b border-border bg-card px-3 py-2 lg:border-b-0", className)}
     >
       <div className="flex items-center justify-between lg:hidden">
         <Button
           type="button"
           variant="outline"
-          size="sm"
           aria-expanded={mobileOpen}
           aria-controls="mobile-sidebar-navigation"
           onClick={() => setMobileOpen(true)}
@@ -104,22 +100,19 @@ export function AppSidebar({ className }: { className?: string }) {
               <p className="mt-1 text-xs text-muted-foreground">مدیریت مرکز</p>
             </div>
           </div>
-          <p className="text-xs font-medium text-muted-foreground">فضای کاری</p>
           {navigation(true)}
         </DialogContent>
       </Dialog>
 
       <div className="hidden lg:block">
-        <div className="flex items-center gap-3 px-2 pb-6 pt-2">
+        <div className="flex items-center gap-3 px-2 pb-3 mb-3 pt-2 border-b">
           <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <CalendarClock className="size-5" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold tracking-tight">اطلس ماساژ</p>
-            <p className="truncate text-xs text-muted-foreground">مدیریت مرکز</p>
+            <h2 className="truncate text-sm font-semibold tracking-tight">اطلس ماساژ</h2>
           </div>
         </div>
-        <p className="px-3 pb-2 text-xs font-medium text-muted-foreground">فضای کاری</p>
         {navigation()}
       </div>
     </aside>

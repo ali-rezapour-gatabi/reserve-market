@@ -6,6 +6,7 @@ import { Pencil, Plus, Trash2, ToggleLeft, ToggleRight } from "lucide-react"
 import { DataTable, type DataTableColumn } from "@/components/data-table"
 import { ServiceDialog } from "@/components/service-dialog"
 import { Button } from "@/components/ui/button"
+import { useToast } from "@/components/ui/toast"
 import { toFa } from "@/lib/jalali"
 import {
   createService,
@@ -16,24 +17,21 @@ import {
 } from "@/lib/repositories"
 import type { Service, ServiceInput } from "@/lib/repositories"
 
-type Feedback = { kind: "success" | "error"; text: string }
-
 export default function ServicesPage() {
+  const toast = useToast()
   const [services, setServices] = useState<Service[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Service | null>(null)
-  const [feedback, setFeedback] = useState<Feedback | null>(null)
 
   const load = useCallback(() => {
     listAllServices()
       .then(setServices)
       .catch((error) =>
-        setFeedback({
-          kind: "error",
-          text: error instanceof Error ? error.message : "خطای ناشناخته",
-        })
+        toast.error(
+          error instanceof Error ? error.message : "خطای ناشناخته"
+        )
       )
-  }, [])
+  }, [toast])
 
   useEffect(() => {
     load()
@@ -55,10 +53,7 @@ export default function ServicesPage() {
       : await createService(input)
 
     setServices(rows)
-    setFeedback({
-      kind: "success",
-      text: editing ? "خدمت ویرایش شد." : "خدمت اضافه شد.",
-    })
+    toast.success(editing ? "خدمت ویرایش شد." : "خدمت اضافه شد.")
     setEditing(null)
   }
 
@@ -67,10 +62,9 @@ export default function ServicesPage() {
       const rows = await setServiceActive(service.id, service.is_active !== 1)
       setServices(rows)
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        text: error instanceof Error ? error.message : "تغییر وضعیت ناموفق بود",
-      })
+      toast.error(
+        error instanceof Error ? error.message : "تغییر وضعیت ناموفق بود"
+      )
     }
   }
 
@@ -78,12 +72,11 @@ export default function ServicesPage() {
     try {
       const rows = await deleteService(service.id)
       setServices(rows)
-      setFeedback({ kind: "success", text: "خدمت حذف شد." })
+      toast.success("خدمت حذف شد.")
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        text: error instanceof Error ? error.message : "حذف خدمت ناموفق بود",
-      })
+      toast.error(
+        error instanceof Error ? error.message : "حذف خدمت ناموفق بود"
+      )
     }
   }
 
@@ -174,48 +167,23 @@ export default function ServicesPage() {
   return (
     <>
       <div className="space-y-5">
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card p-4 text-card-foreground shadow-sm shadow-foreground/[0.02] sm:p-5">
-        <div>
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card p-4 text-card-foreground shadow-sm shadow-foreground/[0.02] sm:p-5">
           <h1 className="text-lg font-bold sm:text-xl">خدمات</h1>
-          <p className="mt-1 text-sm text-muted-foreground">مدیریت خدمات، مدت‌زمان و قیمت هر جلسه</p>
-        </div>
-
-        <Button type="button" size="sm" onClick={openCreate}>
-          <Plus className="size-4" />
-          افزودن خدمت
-        </Button>
-      </section>
-
-      {feedback && (
-        <div
-          role={feedback.kind === "error" ? "alert" : "status"}
-          className={
-            feedback.kind === "error"
-              ? "flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
-              : "flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3 text-sm text-primary"
-          }
-        >
-          <span>{feedback.text}</span>
-          <Button
-            type="button"
-            size="xs"
-            variant="ghost"
-            onClick={() => setFeedback(null)}
-          >
-            بستن
+          <Button type="button" size="sm" onClick={openCreate}>
+            <Plus className="size-4" />
+            افزودن خدمت
           </Button>
-        </div>
-      )}
+        </section>
 
-      <DataTable
-        columns={columns}
-        data={services}
-        getRowId={(row) => row.id}
-        initialSort={{ key: "name", dir: "asc" }}
-        searchPlaceholder="جستجوی خدمت..."
-        emptyMessage="هنوز خدمتی اضافه نکرده‌اید."
-        pageSize={10}
-      />
+        <DataTable
+          columns={columns}
+          data={services}
+          getRowId={(row) => row.id}
+          initialSort={{ key: "name", dir: "asc" }}
+          searchPlaceholder="جستجوی خدمت..."
+          emptyMessage="هنوز خدمتی اضافه نکرده‌اید."
+          pageSize={10}
+        />
       </div>
 
       <ServiceDialog

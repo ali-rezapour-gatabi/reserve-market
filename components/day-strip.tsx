@@ -76,7 +76,7 @@ export function DayStrip({ selected, onSelect, className }: DayStripProps) {
     selectedParts?.jy === monthParts.jy && selectedParts.jm === monthParts.jm
       ? selectedParts.jd
       : jalaliParts(today).jy === monthParts.jy &&
-          jalaliParts(today).jm === monthParts.jm
+        jalaliParts(today).jm === monthParts.jm
         ? jalaliParts(today).jd
         : 1
   const activeWeekIndex = Math.floor((firstWeekday + anchorDay - 1) / 7)
@@ -161,8 +161,8 @@ export function DayStrip({ selected, onSelect, className }: DayStripProps) {
           isPast && !isSelected && "opacity-60",
           !inCurrentMonth && !isSelected && "opacity-35",
           isToday &&
-            !isSelected &&
-            "border-secondary bg-secondary/30 font-medium text-secondary-foreground opacity-100"
+          !isSelected &&
+          "border-secondary bg-secondary/30 font-medium text-secondary-foreground opacity-100"
         )}
       >
         <span className="text-[11px] leading-none opacity-80">
@@ -196,7 +196,7 @@ export function DayStrip({ selected, onSelect, className }: DayStripProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button type="button" size="sm" variant="secondary" onClick={goToday}>
+          <Button type="button" variant="secondary" onClick={goToday}>
             امروز
           </Button>
           <div className="flex items-center gap-1">

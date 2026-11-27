@@ -1,12 +1,11 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { addDays, isSameDay, startOfDay } from "date-fns"
+import { addDays, startOfDay } from "date-fns"
 import {
   CalendarDays,
   CalendarPlus,
   Check,
-  CircleAlert,
   CircleCheck,
   CircleDollarSign,
   Eye,
@@ -14,7 +13,6 @@ import {
   RefreshCw,
   Trash2,
   Undo2,
-  X,
 } from "lucide-react"
 
 import { DayStrip } from "@/components/day-strip"
@@ -23,6 +21,7 @@ import { DataTable, type DataTableColumn } from "@/components/data-table"
 import { EditBook } from "@/components/edit-book"
 import { ExportExcelButton } from "@/components/export-excel"
 import { Button } from "@/components/ui/button"
+import { useToast } from "@/components/ui/toast"
 import {
   Dialog,
   DialogContent,
@@ -52,8 +51,7 @@ import type {
   Service,
   Therapist,
 } from "@/lib/repositories"
-
-type Feedback = { kind: "success" | "error"; text: string }
+import { AppointmentCards } from "@/components/appointment-card"
 
 const STATUS_STYLES: Record<string, string> = {
   scheduled: "bg-primary/10 text-primary",
@@ -63,6 +61,7 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 export default function DashboardPage() {
+  const toast = useToast()
   const today = useLocalDay()
   const [currentTime, setCurrentTime] = useState(() => Date.now())
   const [services, setServices] = useState<Service[]>([])
@@ -75,7 +74,6 @@ export default function DashboardPage() {
   const [viewingSessionsLoading, setViewingSessionsLoading] = useState(false)
   const [editing, setEditing] = useState<AppointmentRow | null>(null)
   const [repeatSource, setRepeatSource] = useState<AppointmentRow | null>(null)
-  const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [revision, setRevision] = useState(0)
 
   const bumpRevision = useCallback(() => {
@@ -91,13 +89,6 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    if (!feedback) return
-
-    const timeout = window.setTimeout(() => setFeedback(null), 5000)
-    return () => window.clearTimeout(timeout)
-  }, [feedback])
-
-  useEffect(() => {
     let active = true
 
     Promise.all([listServices(), listTherapists()])
@@ -110,16 +101,15 @@ export default function DashboardPage() {
         if (!active) return
         setServices([])
         setTherapists([])
-        setFeedback({
-          kind: "error",
-          text: error instanceof Error ? error.message : "خطای ناشناخته",
-        })
+        toast.error(
+          error instanceof Error ? error.message : "خطای ناشناخته"
+        )
       })
 
     return () => {
       active = false
     }
-  }, [revision])
+  }, [revision, toast])
 
   useEffect(() => {
     let active = true
@@ -172,10 +162,7 @@ export default function DashboardPage() {
   const handleCreate = async (booking: NewBooking) => {
     const count = await createBooking(booking)
 
-    setFeedback({
-      kind: "success",
-      text: `${toFa(count)} جلسه با موفقیت ثبت شد.`,
-    })
+    toast.success(`${toFa(count)} جلسه با موفقیت ثبت شد.`)
 
     bumpRevision()
   }
@@ -183,10 +170,7 @@ export default function DashboardPage() {
   const handleEdit = async (id: number, input: AppointmentEdit) => {
     await updateAppointment(id, input)
 
-    setFeedback({
-      kind: "success",
-      text: "نوبت با موفقیت ویرایش شد.",
-    })
+    toast.success("نوبت با موفقیت ویرایش شد.")
 
     setEditing(null)
     bumpRevision()
@@ -209,7 +193,6 @@ export default function DashboardPage() {
     {
       label: "کل نوبت‌ها",
       value: toFa(dayAppointments.length),
-      detail: "ثبت‌شده برای این روز",
       icon: CalendarDays,
       tone: "text-primary",
       iconTone: "bg-primary/10",
@@ -217,7 +200,6 @@ export default function DashboardPage() {
     {
       label: "زمان‌بندی‌شده",
       value: toFa(pendingCount),
-      detail: "در انتظار انجام",
       icon: RefreshCw,
       tone: "text-foreground",
       iconTone: "bg-muted",
@@ -225,7 +207,6 @@ export default function DashboardPage() {
     {
       label: "انجام‌شده",
       value: toFa(doneCount),
-      detail: "تکمیل‌شده در این روز",
       icon: CircleCheck,
       tone: "text-primary",
       iconTone: "bg-primary/10",
@@ -233,7 +214,6 @@ export default function DashboardPage() {
     {
       label: "دریافتی روز",
       value: `${toFa(completedRevenue)} تومان`,
-      detail: "",
       icon: CircleDollarSign,
       tone: "text-secondary-foreground",
       iconTone: "bg-secondary/30",
@@ -253,28 +233,24 @@ export default function DashboardPage() {
       if (dayDone) {
         const count = await reopenDayAppointments(from, to)
 
-        setFeedback({
-          kind: "success",
-          text: `${toFa(count)} نوبت به حالت زمان‌بندی‌شده بازگشت.`,
-        })
+        toast.success(
+          `${toFa(count)} نوبت به حالت زمان‌بندی‌شده بازگشت.`
+        )
       } else {
         const count = await completeDayAppointments(from, to)
 
-        setFeedback({
-          kind: "success",
-          text: `${toFa(count)} نوبت این روز انجام‌شده علامت خورد.`,
-        })
+        toast.success(
+          `${toFa(count)} نوبت این روز انجام‌شده علامت خورد.`
+        )
       }
 
       bumpRevision()
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        text:
-          error instanceof Error
-            ? error.message
-            : "تغییر وضعیت روز با خطا مواجه شد.",
-      })
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "تغییر وضعیت روز با خطا مواجه شد."
+      )
     }
   }
 
@@ -284,23 +260,19 @@ export default function DashboardPage() {
     try {
       await setAppointmentStatus(row.id, nextStatus)
 
-      setFeedback({
-        kind: "success",
-        text:
-          nextStatus === "completed"
-            ? `نوبت ${row.full_name} انجام‌شده علامت خورد.`
-            : `نوبت ${row.full_name} به حالت زمان‌بندی‌شده بازگشت.`,
-      })
+      toast.success(
+        nextStatus === "completed"
+          ? `نوبت ${row.full_name} انجام‌شده علامت خورد.`
+          : `نوبت ${row.full_name} به حالت زمان‌بندی‌شده بازگشت.`
+      )
 
       bumpRevision()
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        text:
-          error instanceof Error
-            ? error.message
-            : "تغییر وضعیت نوبت با خطا مواجه شد.",
-      })
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "تغییر وضعیت نوبت با خطا مواجه شد."
+      )
     }
   }
 
@@ -323,13 +295,12 @@ export default function DashboardPage() {
         setViewing(null)
         setViewingSessions([])
       }
-      setFeedback({ kind: "success", text: "نوبت حذف شد." })
+      toast.success("نوبت حذف شد.")
       bumpRevision()
     } catch (error) {
-      setFeedback({
-        kind: "error",
-        text: error instanceof Error ? error.message : "حذف نوبت ناموفق بود.",
-      })
+      toast.error(
+        error instanceof Error ? error.message : "حذف نوبت ناموفق بود."
+      )
     }
   }
 
@@ -510,36 +481,26 @@ export default function DashboardPage() {
     <>
       <div className="animate-in space-y-5 duration-500 fade-in-0 sm:space-y-6">
         <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-              <p className="text-xs font-medium text-muted-foreground">
-                {isSameDay(selectedDay, new Date()) ? "امروز" : weekdayName(selectedDay)}
-                <span className="px-1.5">·</span>
-                {formatNumericDate(selectedDay)}
-              </p>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl xl:text-4xl">روزتان بخیر</h1>
-              <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                نمای کلی نوبت‌ها و عملکرد مرکز شما در یک نگاه.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
-                className="bg-card"
-                onClick={bumpRevision}
-                aria-label="نوسازی نوبت‌ها"
-                title="نوسازی نوبت‌ها"
-              >
-                <RefreshCw className="size-4" />
-              </Button>
-              <ExportExcelButton />
-              <CreateBook
-                services={services}
-                therapists={therapists}
-                onCreate={handleCreate}
-              />
-            </div>
+          <h1 className="mt-2 font-bold tracking-tight sm:text-xl xl:text-2xl hidden md:flex">روزتان بخیر</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              className="bg-card"
+              onClick={bumpRevision}
+              aria-label="نوسازی نوبت‌ها"
+              title="نوسازی نوبت‌ها"
+            >
+              <RefreshCw className="size-4" />
+            </Button>
+            <ExportExcelButton />
+            <CreateBook
+              services={services}
+              therapists={therapists}
+              onCreate={handleCreate}
+            />
+          </div>
         </section>
 
         <section aria-label="خلاصه نوبت‌های روز" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
@@ -547,14 +508,13 @@ export default function DashboardPage() {
             const Icon = metric.icon
 
             return (
-              <article key={metric.label} className="flex min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card p-3.5 shadow-sm shadow-foreground/[0.02] sm:gap-4 sm:p-5">
+              <article key={metric.label} className="flex min-w-0 items-center gap-3 rounded-md border border-border/70 bg-card p-3.5 shadow-sm shadow-foreground/[0.02] sm:gap-4 sm:p-5">
                 <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${metric.iconTone} ${metric.tone} sm:size-12`}>
                   <Icon className="size-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
                   <p className="truncate text-xs text-muted-foreground">{metric.label}</p>
-                  <p className={`mt-1 truncate text-lg font-bold tabular-nums sm:text-xl ${metric.tone}`}>{metric.value}</p>
-                  {metric.detail && <p className="mt-0.5 hidden truncate text-[11px] text-muted-foreground sm:block">{metric.detail}</p>}
+                  <p className={`mt-1 truncate text-lg font-bold tabular-nums sm:text-md ${metric.tone}`}>{metric.value}</p>
                 </div>
               </article>
             )
@@ -562,54 +522,66 @@ export default function DashboardPage() {
         </section>
 
         <section className="rounded-2xl border border-border/70 bg-card p-3 shadow-sm shadow-foreground/[0.02] sm:p-4">
-          <div className="mb-3 flex items-center justify-between gap-3 px-1">
-            <div>
-              <h2 className="text-sm font-bold">برنامه روزانه</h2>
-              <p className="mt-1 text-xs text-muted-foreground">برای مشاهده نوبت‌های هر روز انتخاب کنید</p>
-            </div>
-            <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">{toFa(dayAppointments.length)} نوبت</span>
-          </div>
           <DayStrip selected={selectedDay} onSelect={setSelectedDayOverride} />
+        </section>
+        <section>
+
+
         </section>
 
         <section className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm shadow-foreground/[0.02] sm:p-5">
-          <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <div>
-              <h2 className="text-base font-bold">فهرست نوبت‌ها</h2>
-              <p className="mt-1 text-xs text-muted-foreground">مدیریت، جستجو و پیگیری رزروهای روز</p>
-            </div>
-            <span className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="size-2 rounded-full bg-primary" />
-              {pendingCount > 0 ? `${toFa(pendingCount)} نوبت در انتظار` : "همه نوبت‌ها به‌روز هستند"}
-            </span>
+          <div className="lg:hidden">
+            <AppointmentCards
+              rows={dayAppointments}
+              emptyMessage={`برای ${formatNumericDate(selectedDay)} نوبتی ثبت نشده است.`}
+              pageSize={8}
+              weekdayName={weekdayName}
+              isInProgress={isAppointmentInProgress}
+              getStatus={(row) => ({
+                label: APPOINTMENT_STATUS_LABELS[row.status] ?? row.status,
+                className: STATUS_STYLES[row.status] ?? "bg-muted text-muted-foreground",
+              })}
+              onToggleDone={handleToggleRowDone}
+              onView={(row) => {
+                setViewingSessions([])
+                setViewingSessionsLoading(true)
+                setViewing(row)
+              }}
+              onRepeat={setRepeatSource}
+              onEdit={setEditing}
+              onDelete={(row) => void handleDeleteAppointment(row)}
+            />
           </div>
-          <DataTable
-            columns={columns}
-            data={dayAppointments}
-            getRowId={(row) => row.id}
-            initialSort={{ key: "start", dir: "asc" }}
-            searchPlaceholder="جستجوی مشتری، خدمت یا متخصص..."
-            emptyMessage={`برای ${formatNumericDate(selectedDay)} نوبتی ثبت نشده است.`}
-            pageSize={8}
-            getRowClassName={(row) =>
-              isAppointmentInProgress(row)
-                ? "bg-primary/5 hover:bg-primary/10"
-                : undefined
-            }
-            toolbar={
-              <Button
-                type="button"
-                size="sm"
-                variant={dayDone ? "default" : "outline"}
-                onClick={handleToggleDayDone}
-                disabled={dayDone ? doneCount === 0 : pendingCount === 0}
-                title={dayDone ? "بازگرداندن نوبت‌های این روز به حالت زمان‌بندی‌شده" : "علامت‌زدن همهٔ نوبت‌های این روز به‌عنوان انجام‌شده"}
-              >
-                {dayDone ? <Undo2 className="size-4" /> : <Check className="size-4" />}
-                {dayDone ? "بازگشت به زمان‌بندی" : "پایان کار روز"}
-              </Button>
-            }
-          />
+          <div className="hidden lg:flex">
+            <DataTable
+              columns={columns}
+              data={dayAppointments}
+              getRowId={(row) => row.id}
+              initialSort={{ key: "start", dir: "asc" }}
+              searchPlaceholder="جستجوی مشتری، خدمت یا متخصص..."
+              emptyMessage={`برای ${formatNumericDate(selectedDay)} نوبتی ثبت نشده است.`}
+              pageSize={8}
+              getRowClassName={(row) =>
+                isAppointmentInProgress(row)
+                  ? "bg-primary/5 hover:bg-primary/10"
+                  : undefined
+              }
+              toolbar={
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={dayDone ? "default" : "outline"}
+                  onClick={handleToggleDayDone}
+                  disabled={dayDone ? doneCount === 0 : pendingCount === 0}
+                  title={dayDone ? "بازگرداندن نوبت‌های این روز به حالت زمان‌بندی‌شده" : "علامت‌زدن همهٔ نوبت‌های این روز به‌عنوان انجام‌شده"}
+                >
+                  {dayDone ? <Undo2 className="size-4" /> : <Check className="size-4" />}
+                  {dayDone ? "بازگشت به زمان‌بندی" : "پایان کار روز"}
+                </Button>
+              }
+            />
+          </div>
+
         </section>
       </div>
 
@@ -721,35 +693,6 @@ export default function DashboardPage() {
           </section>
         </DialogContent>
       </Dialog>
-
-      {feedback && (
-        <div className="pointer-events-none fixed inset-x-4 bottom-4 z-100 flex justify-center sm:inset-x-auto sm:inset-e-6 sm:w-full sm:max-w-md">
-          <div
-            role="status"
-            aria-live={feedback.kind === "error" ? "assertive" : "polite"}
-            className={`pointer-events-auto flex w-full animate-in items-start gap-3 rounded-lg border p-4 text-sm shadow-lg fade-in slide-in-from-bottom-2 ${feedback.kind === "error"
-                ? "border-destructive/30 bg-card text-destructive"
-                : "border-primary/30 bg-card text-foreground"
-              }`}
-          >
-            {feedback.kind === "error" ? (
-              <CircleAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
-            ) : (
-              <CircleCheck className="mt-0.5 size-5 shrink-0 text-primary" />
-            )}
-            <p className="min-w-0 flex-1 leading-6">{feedback.text}</p>
-            <Button
-              type="button"
-              size="icon-xs"
-              variant="ghost"
-              aria-label="بستن پیام"
-              onClick={() => setFeedback(null)}
-            >
-              <X className="size-4" />
-            </Button>
-          </div>
-        </div>
-      )}
 
       <CreateBook
         key={repeatSource?.id ?? "no-repeat"}

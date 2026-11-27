@@ -3,15 +3,18 @@
 import { useEffect, useMemo, useState } from "react"
 import { addDays, startOfDay } from "date-fns"
 import {
+  AlertCircle,
+  CalendarCheck2,
   CalendarDays,
-  CalendarRange,
   Clock,
   ListChecks,
+  Loader2,
   Phone,
   Repeat,
   Sparkles,
   StickyNote,
   User,
+  UserRound,
   Wallet,
 } from "lucide-react"
 
@@ -26,12 +29,10 @@ import {
   ServicePicker,
   summarizeServices,
 } from "@/components/service-picker"
-import { Separator } from "@/components/ui/separator"
 import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -145,35 +146,40 @@ function createEmptyForm(today: Date, prefill?: CreateBookPrefill) {
   }
 }
 
-function Panel({
+/* ------------------------------------------------------------------ */
+/*  Layout primitives                                                  */
+/* ------------------------------------------------------------------ */
+
+function Step({
+  index,
   icon: Icon,
   title,
   hint,
   children,
-  className,
 }: {
+  index: number
   icon: React.ComponentType<{ className?: string }>
   title: string
   hint?: string
   children: React.ReactNode
-  className?: string
 }) {
   return (
-    <section
-      className={cn("flex flex-col gap-4 rounded-2xl border border-border/70 bg-card p-4 shadow-sm shadow-foreground/[0.02] sm:p-5", className)}
-    >
-      <header className="flex items-center gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Icon className="size-4.5" />
+    <section className="grid gap-4 py-6 first:pt-0 last:pb-0 md:grid-cols-[11rem_1fr] md:gap-8">
+      <header className="flex items-start gap-3 md:flex-col md:gap-2">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground tabular-nums">
+          {toFa(index)}
         </span>
         <div className="min-w-0">
-          <h3 className="text-sm font-bold leading-tight sm:text-base">{title}</h3>
+          <h3 className="flex items-center gap-1.5 text-sm font-bold leading-6">
+            <Icon className="size-4 text-primary md:hidden" />
+            {title}
+          </h3>
           {hint && (
-            <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+            <p className="text-xs leading-5 text-muted-foreground">{hint}</p>
           )}
         </div>
       </header>
-      {children}
+      <div className="min-w-0 space-y-4">{children}</div>
     </section>
   )
 }
@@ -182,27 +188,68 @@ function Field({
   label,
   htmlFor,
   required,
+  hint,
   children,
   className,
 }: {
   label: string
   htmlFor?: string
   required?: boolean
+  hint?: React.ReactNode
   children: React.ReactNode
   className?: string
 }) {
   return (
-    <div className={cn("flex flex-col gap-2", className)}>
-      <Label htmlFor={htmlFor} className="text-sm font-medium text-foreground/80">
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <Label htmlFor={htmlFor} className="text-xs font-medium text-muted-foreground">
         {label}
         {required && <span className="text-destructive"> *</span>}
       </Label>
+      {children}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    </div>
+  )
+}
+
+function IconInputWrap({
+  icon: Icon,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  children: React.ReactNode
+}) {
+  return (
+    <div className="relative">
+      <Icon className="pointer-events-none absolute inset-y-0 right-3 z-10 my-auto size-4 text-muted-foreground" />
       {children}
     </div>
   )
 }
 
-const inputClass = "h-11 rounded-xl bg-background text-center"
+function SummaryRow({
+  icon: Icon,
+  label,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  children?: React.ReactNode
+}) {
+  return (
+    <div className="flex items-start gap-3 py-3">
+      <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+      <div className="min-w-0 flex-1">
+        <div className="text-xs text-muted-foreground">{label}</div>
+        <div className="mt-0.5 text-sm font-medium leading-6 text-foreground">
+          {children ?? <span className="font-normal text-muted-foreground/70">—</span>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const inputClass = "h-11 rounded-lg bg-background"
+
 
 export function CreateBook({
   services,
@@ -231,7 +278,10 @@ export function CreateBook({
     value: (typeof emptyForm)[Key]
   ) => setForm((prev) => ({ ...prev, [key]: value }))
 
-  const activeServices = services.filter((item) => item.is_active === 1)
+  const activeServices = useMemo(
+    () => services.filter((item) => item.is_active === 1),
+    [services]
+  )
 
   const {
     services: pickedServices,
@@ -292,6 +342,10 @@ export function CreateBook({
     label: item.specialty ? `${item.name} — ${item.specialty}` : item.name,
   }))
 
+  const selectedTherapist = therapistOptions.find(
+    (item) => item.value === form.therapistId
+  )
+
   const selectedWeekdayLabels = sortWeekdays(form.weekdays)
     .map((day) => WEEKDAY_NAMES[day])
     .join("، ")
@@ -301,6 +355,7 @@ export function CreateBook({
       ? Math.ceil(requestedTotal / form.weekdays.length)
       : 0
 
+  const startLabel = form.time ? toFaDigits(form.time) : ""
   const endTimeLabel = useMemo(() => {
     if (!form.time) return ""
     const start = combineDateAndTime(today, form.time)
@@ -318,6 +373,14 @@ export function CreateBook({
   const resetForm = () => {
     setForm(createEmptyForm(today, prefill))
     setError("")
+  }
+
+  const changeOpen = (value: boolean) => {
+    if (isControlled) {
+      onOpenChange?.(value)
+      return
+    }
+    setUncontrolledOpen(value)
   }
 
   const validate = () => {
@@ -345,11 +408,9 @@ export function CreateBook({
       if (!form.startDate[0]) {
         return "تاریخ شروع را انتخاب کنید."
       }
-
       if (form.weekdays.length === 0) {
         return "دست‌کم یک روز از هفته را انتخاب کنید."
       }
-
       if (requestedTotal < 1) {
         return "تعداد جلسات باید دست‌کم ۱ باشد."
       }
@@ -406,174 +467,124 @@ export function CreateBook({
     }
   }
 
-  const changeOpen = (value: boolean) => {
-    if (isControlled) {
-      onOpenChange?.(value)
-      return
-    }
-
-    setUncontrolledOpen(value)
-  }
+  const submitLabel = loading
+    ? "در حال ثبت..."
+    : sessions.length > 1
+      ? `ثبت ${toFa(sessions.length)} جلسه`
+      : "ثبت نوبت"
 
   return (
     <Dialog
       open={open}
       onOpenChange={(value) => {
-        if (loading) {
-          return
-        }
-
+        if (loading) return
         changeOpen(value)
-
-        if (!value) {
-          resetForm()
-        }
+        if (!value) resetForm()
       }}
     >
       {isControlled ? null : (
         <DialogTrigger
           render={
-      <Button className={triggerClassName}>
-        <CalendarDays className="size-4" />
-        {trigger ?? title}
-      </Button>
+            <Button className={triggerClassName}>
+              <CalendarDays className="size-4" />
+              {trigger ?? title}
+            </Button>
           }
         />
       )}
 
       <DialogContent
         dir="rtl"
-        className="max-h-[94dvh] w-[calc(100%-1rem)] translate-x-0 flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:w-[calc(100%-2rem)] md:max-w-5xl xl:max-w-6xl"
+        className="flex max-h-[94dvh] w-[calc(100%-1rem)] flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:w-[calc(100%-2rem)] md:max-w-5xl xl:max-w-6xl"
       >
-        <form
-          onSubmit={handleSubmit}
-          className="flex max-h-[94dvh] min-h-0 flex-1 flex-col overflow-y-auto"
-        >
-          <DialogHeader className="shrink-0 flex-row items-center gap-3 p-4 text-right sm:p-6">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <DialogHeader className="shrink-0 flex-row items-center gap-3 border-b bg-card px-4 py-4 text-right sm:px-6">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <CalendarDays className="size-5" />
             </div>
-            <div className="space-y-0.5">
-              <DialogTitle className="text-lg font-bold sm:text-xl">
+            <div className="min-w-0">
+              <DialogTitle className="text-base font-bold sm:text-lg">
                 {title}
               </DialogTitle>
               <p className="text-xs text-muted-foreground">
-                اطلاعات مشتری، خدمت و روزهای جلسات را وارد کنید.
+                مشتری، خدمت و زمان‌بندی را به ترتیب تکمیل کنید.
               </p>
             </div>
           </DialogHeader>
 
-          <Separator />
+          <div className="grid min-h-0 flex-1 overflow-y-auto lg:overflow-hidden">
+            <div className="divide-y divide-border/70 p-4 sm:p-6 lg:overflow-y-auto [&>section]:border-border/70">
+              <Step
+                index={1}
+                icon={User}
+                title="مشتری"
+                hint="جست‌وجو در مشتریان قبلی یا ثبت مشتری جدید"
+              >
+                <Field label="نام و نام خانوادگی" htmlFor="customer-name" required>
+                  <CustomerSearch
+                    value={form.fullName}
+                    onValueChange={(value) => update("fullName", value)}
+                    onSelect={(customer) => {
+                      if (customer.phone.length > 0) {
+                        update("phone", customer.phone)
+                      }
+                      update("referral", customer.referral ?? "")
+                    }}
+                    inputClassName={cn(inputClass, "ps-9 text-start")}
+                  />
+                </Field>
 
-          <div className="min-h-0 flex-1 overflow-y-auto bg-muted/20 p-3 sm:p-6">
-            <div className="grid gap-3 sm:gap-4 lg:grid-cols-2 lg:gap-5">
-              <div className="space-y-4 lg:space-y-5">
-                <Panel icon={User} title="اطلاعات مشتری">
-                  <Field
-                    label="نام و نام خانوادگی"
-                    htmlFor="customer-name"
-                    required
-                  >
-                    <CustomerSearch
-                      value={form.fullName}
-                      onValueChange={(value) => update("fullName", value)}
-                      onSelect={(customer) => {
-                        if (customer.phone.length > 0) {
-                          update("phone", customer.phone)
-                        }
-                        update("referral", customer.referral ?? "")
-                      }}
-                      inputClassName={cn(inputClass, "ps-9 text-start")}
-                    />
-                  </Field>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field
-                      label="شماره موبایل (اختیاری)"
-                      htmlFor="customer-phone"
-                    >
-                      <div className="relative">
-                        <Phone className="pointer-events-none absolute inset-y-0 right-3 my-auto size-4 text-muted-foreground" />
-                        <PersianNumberInput
-                          id="customer-phone"
-                          placeholder="۰۹۱۲۳۴۵۶۷۸۹"
-                          value={form.phone}
-                          onValueChange={(value) => update("phone", value)}
-                          maxLength={11}
-                          className={cn(
-                            inputClass,
-                            "pr-3 pl-3 text-left tabular-nums"
-                          )}
-                        />
-                      </div>
-                    </Field>
-
-                    <Field label="معرفی شده توسط " htmlFor="referral">
-                      <div className="relative">
-                        <User className="pointer-events-none absolute inset-y-0 right-3 my-auto size-4 text-muted-foreground" />
-                        <Input
-                          id="referral"
-                          type="text"
-                          dir="rtl"
-                          value={form.referral}
-                          placeholder="نام معرف"
-                          onChange={(event) =>
-                            update("referral", event.target.value)
-                          }
-                          className="pr-10"
-                        />
-                      </div>
-                    </Field>
-                  </div>
-                </Panel>
-
-                <Panel
-                  icon={Sparkles}
-                  title="خدمت و متخصص"
-                  hint={
-                    pickedServices.length > 0
-                      ? `${toFa(pickedServices.length)} خدمت • مجموع ${toFa(durationMinutes)} دقیقه`
-                      : `انتخاب خدمت اجباری نیست؛ در نبود خدمت، مدت پیش‌فرض ${toFa(
-                        DEFAULT_SESSION_MINUTES
-                      )} دقیقه در نظر گرفته می‌شود.`
-                  }
-                >
-                  <Field label="خدمات ماساژ (چند انتخابی)">
-                    <ServicePicker
-                      services={activeServices}
-                      selectedIds={form.serviceIds}
-                      onToggle={toggleService}
-                      onClear={() => update("serviceIds", [])}
-                    />
-                  </Field>
-
-                  <Field
-                    label="قیمت دریافتی هر جلسه"
-                    htmlFor="appointment-price"
-                  >
-                    <div className="relative">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="شماره موبایل (اختیاری)" htmlFor="customer-phone">
+                    <IconInputWrap icon={Phone}>
                       <PersianNumberInput
-                        id="appointment-price"
-                        value={
-                          form.price === "" ? String(totalPrice) : form.price
-                        }
-                        onValueChange={(value) => update("price", value)}
-                        className={cn(inputClass, "pr-16")}
-                        aria-describedby="appointment-price-hint"
+                        id="customer-phone"
+                        placeholder="۰۹۱۲۳۴۵۶۷۸۹"
+                        value={form.phone}
+                        onValueChange={(value) => update("phone", value)}
+                        maxLength={11}
+                        className={cn(inputClass, "pr-10 pl-3 text-left tabular-nums")}
                       />
-                      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-muted-foreground">
-                        تومان
-                      </span>
-                    </div>
-                    <p
-                      id="appointment-price-hint"
-                      className="text-xs text-muted-foreground"
-                    >
-                      قیمت خدمات انتخاب‌شده: {toFa(totalPrice)} تومان
-                    </p>
+                    </IconInputWrap>
                   </Field>
 
-                  <Field label="متخصص ماساژ">
+                  <Field label="معرفی‌شده توسط (اختیاری)" htmlFor="referral">
+                    <IconInputWrap icon={UserRound}>
+                      <Input
+                        id="referral"
+                        type="text"
+                        dir="rtl"
+                        value={form.referral}
+                        placeholder="نام معرف"
+                        onChange={(event) => update("referral", event.target.value)}
+                        className={cn(inputClass, "pr-10")}
+                      />
+                    </IconInputWrap>
+                  </Field>
+                </div>
+              </Step>
+
+              <Step
+                index={2}
+                icon={Sparkles}
+                title="خدمت و متخصص"
+                hint={
+                  pickedServices.length > 0
+                    ? `${toFa(pickedServices.length)} خدمت • ${toFa(durationMinutes)} دقیقه`
+                    : `بدون انتخاب خدمت، مدت جلسه ${toFa(DEFAULT_SESSION_MINUTES)} دقیقه است.`
+                }
+              >
+                <Field label="خدمات ماساژ (چند انتخابی)">
+                  <ServicePicker
+                    services={activeServices}
+                    selectedIds={form.serviceIds}
+                    onToggle={toggleService}
+                    onClear={() => update("serviceIds", [])}
+                  />
+                </Field>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="متخصص ماساژ (اختیاری)">
                     <Select
                       items={therapistOptions}
                       value={form.therapistId}
@@ -582,7 +593,7 @@ export function CreateBook({
                       }
                     >
                       <SelectTrigger className={cn(inputClass, "w-full")}>
-                        <SelectValue placeholder="اختیاری" />
+                        <SelectValue placeholder="انتخاب متخصص" />
                       </SelectTrigger>
                       <SelectContent>
                         {therapistOptions.length === 0 ? (
@@ -599,13 +610,125 @@ export function CreateBook({
                       </SelectContent>
                     </Select>
                   </Field>
-                </Panel>
-              </div>
 
-              <div className="space-y-4 lg:space-y-5">
-                <Panel icon={Clock} title="ساعت جلسه">
-                  <div className="flex flex-wrap items-stretch gap-3">
-                    <div className="relative w-44">
+                  <Field
+                    label="قیمت هر جلسه"
+                    htmlFor="appointment-price"
+                    hint={
+                      <span id="appointment-price-hint">
+                        مجموع خدمات انتخاب‌شده: {toFa(totalPrice)} تومان
+                      </span>
+                    }
+                  >
+                    <div className="relative">
+                      <PersianNumberInput
+                        id="appointment-price"
+                        value={form.price === "" ? String(totalPrice) : form.price}
+                        onValueChange={(value) => update("price", value)}
+                        className={cn(inputClass, "pl-16 text-left tabular-nums")}
+                        aria-describedby="appointment-price-hint"
+                      />
+                      <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted-foreground">
+                        تومان
+                      </span>
+                    </div>
+                  </Field>
+                </div>
+              </Step>
+
+              <Step
+                index={3}
+                icon={Repeat}
+                title="زمان‌بندی"
+                hint="روزهای جلسات و ساعت شروع"
+              >
+                <div
+                  role="tablist"
+                  aria-label="نوع زمان‌بندی"
+                  className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1"
+                >
+                  {(
+                    [
+                      ["dates", "انتخاب از تقویم"],
+                      ["weekly", "تکرار هفتگی"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      role="tab"
+                      aria-selected={form.mode === value}
+                      onClick={() => update("mode", value)}
+                      className={cn(
+                        "h-9 rounded-md text-sm font-medium outline-none transition-colors",
+                        "focus-visible:ring-2 focus-visible:ring-ring",
+                        form.mode === value
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {form.mode === "dates" ? (
+                  <Field label="تاریخ جلسات (امکان انتخاب چند روز)">
+                    <DatePicker
+                      mode="multiple"
+                      value={form.dates}
+                      onChange={(value) => update("dates", value)}
+                      minDate={today}
+                      allowPast={true}
+                      maxSelection={MAX_SESSIONS}
+                      placeholder="انتخاب روزها"
+                    />
+                  </Field>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
+                      <Field label="تاریخ شروع">
+                        <DatePicker
+                          mode="single"
+                          value={form.startDate}
+                          onChange={(value) => update("startDate", value)}
+                          minDate={today}
+                          allowPast={true}
+                          placeholder="انتخاب تاریخ شروع"
+                          className="w-full"
+                        />
+                      </Field>
+
+                      <Field label="تعداد جلسات" htmlFor="total-sessions">
+                        <PersianNumberInput
+                          id="total-sessions"
+                          className={cn(inputClass, "text-center text-base")}
+                          value={form.totalSessions}
+                          onValueChange={(value) => update("totalSessions", value)}
+                        />
+                      </Field>
+                    </div>
+
+                    <Field label="روزهای هفته">
+                      <WeekdaysPicker
+                        value={form.weekdays}
+                        onChange={(value) => update("weekdays", value)}
+                      />
+                    </Field>
+
+                    {form.weekdays.length > 0 && requestedTotal > 0 && (
+                      <p className="rounded-lg bg-muted/60 px-3 py-2 text-xs leading-6 text-muted-foreground">
+                        هفته‌ای {toFa(form.weekdays.length)} جلسه (
+                        {selectedWeekdayLabels}) — حدود {toFa(weeksCount)} هفته
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Time */}
+                <div className="space-y-3 rounded-xl border bg-muted/20 p-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="relative w-40">
                       <Input
                         id="session-time"
                         type="time"
@@ -615,7 +738,7 @@ export function CreateBook({
                         aria-label="ساعت شروع"
                         aria-invalid={selectedTimeHasConflict}
                         className={cn(
-                          "h-14 rounded-lg border-2 bg-background pr-11 pl-3 text-center text-2xl font-semibold tracking-wider tabular-nums",
+                          "h-12 rounded-lg border-2 bg-background pr-10 pl-3 text-center text-xl font-semibold tracking-wider tabular-nums",
                           selectedTimeHasConflict && "border-destructive",
                           "focus-visible:border-primary",
                           !form.time && "text-muted-foreground",
@@ -627,34 +750,24 @@ export function CreateBook({
                           "[&::-webkit-calendar-picker-indicator]:opacity-0"
                         )}
                       />
-                      <Clock className="pointer-events-none absolute inset-y-0 right-3.5 my-auto size-5 text-primary" />
+                      <Clock className="pointer-events-none absolute inset-y-0 right-3 my-auto size-4 text-primary" />
                     </div>
 
-                    <div
-                      className={cn(
-                        "flex min-w-32 flex-1 flex-col justify-center rounded-lg px-4 text-sm",
-                        endTimeLabel
-                          ? "bg-primary/10 text-primary"
-                          : "border border-dashed text-muted-foreground"
-                      )}
-                    >
+                    <div className="text-sm text-muted-foreground">
                       {endTimeLabel ? (
                         <>
-                          <span className="text-xs opacity-80">پایان جلسه</span>
-                          <span className="text-lg font-semibold tabular-nums">
+                          پایان جلسه:{" "}
+                          <span className="font-semibold text-foreground tabular-nums">
                             {endTimeLabel}
                           </span>
                         </>
                       ) : (
-                        <span className="text-xs leading-6">
-                          بعد از انتخاب ساعت، ساعت پایان جلسه اینجا نمایش داده
-                          می‌شود.
-                        </span>
+                        "ساعت شروع را انتخاب کنید."
                       )}
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                     {QUICK_TIMES.map((time) => {
                       const active = form.time === time
                       const busy = timeHasConflict(time)
@@ -664,18 +777,14 @@ export function CreateBook({
                           type="button"
                           aria-pressed={active}
                           aria-label={`${toFaDigits(time)}${busy ? "، تداخل با نوبت رزروشده" : ""}`}
-                          title={
-                            busy
-                              ? "با یک نوبت زمان‌بندی‌شده تداخل دارد"
-                              : undefined
-                          }
+                          title={busy ? "با یک نوبت زمان‌بندی‌شده تداخل دارد" : undefined}
                           onClick={() => update("time", time)}
                           className={cn(
-                            "rounded-lg border px-3.5 py-1.5 text-sm tabular-nums transition-colors outline-none",
+                            "h-9 rounded-lg border text-sm tabular-nums outline-none transition-colors",
                             "focus-visible:ring-2 focus-visible:ring-ring",
                             busy
                               ? active
-                                ? "text-destructive-foreground border-destructive bg-destructive font-medium"
+                                ? "border-destructive bg-destructive font-medium text-white"
                                 : "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15"
                               : active
                                 ? "border-transparent bg-primary font-medium text-primary-foreground"
@@ -687,196 +796,91 @@ export function CreateBook({
                       )
                     })}
                   </div>
+
                   {sessions.length > 0 && (
                     <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="size-2 rounded-full bg-destructive" />
-                      قرمز: این ساعت در یکی از روزهای انتخابی با نوبت دیگری
-                      تداخل دارد.
+                      <span className="size-2 shrink-0 rounded-full bg-destructive" />
+                      ساعت قرمز در یکی از روزهای انتخابی با نوبت دیگری تداخل دارد.
                     </p>
                   )}
                   {selectedTimeHasConflict && (
-                    <p role="alert" className="text-xs text-destructive">
-                      ساعت انتخاب‌شده در یکی از روزهای انتخابی با نوبت دیگری
-                      تداخل دارد.
+                    <p role="alert" className="text-xs font-medium text-destructive">
+                      ساعت انتخاب‌شده با نوبت دیگری تداخل دارد؛ ساعت دیگری انتخاب کنید.
                     </p>
                   )}
-                </Panel>
-                <Panel icon={Repeat} title="روزهای جلسات">
-                  <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={form.mode === "dates" ? "default" : "ghost"}
-                      className="rounded-lg"
-                      onClick={() => update("mode", "dates")}
-                    >
-                      انتخاب از تقویم
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={form.mode === "weekly" ? "default" : "ghost"}
-                      className="rounded-lg"
-                      onClick={() => update("mode", "weekly")}
-                    >
-                      تکرار هفتگی
-                    </Button>
-                  </div>
+                </div>
+              </Step>
 
-                  {form.mode === "dates" ? (
-                    <Field label="تاریخ جلسات (امکان انتخاب چند روز)">
-                      <DatePicker
-                        mode="multiple"
-                        value={form.dates}
-                        onChange={(value) => update("dates", value)}
-                        minDate={today}
-                        allowPast={true}
-                        maxSelection={MAX_SESSIONS}
-                        placeholder="انتخاب روزها"
-                      />
-                    </Field>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex gap-2">
-                        <Field label="تاریخ شروع" className="w-3/4">
-                          <DatePicker
-                            mode="single"
-                            value={form.startDate}
-                            onChange={(value) => update("startDate", value)}
-                            minDate={today}
-                            allowPast={true}
-                            placeholder="انتخاب تاریخ شروع"
-                            className="w-full"
-                          />
-                        </Field>
-
-                        <Field
-                          label={`تعداد جلسات`}
-                          htmlFor="total-sessions"
-                          className="w-1/4"
-                        >
-                          <PersianNumberInput
-                            id="total-sessions"
-                            className={cn(inputClass, "text-lg")}
-                            value={form.totalSessions}
-                            onValueChange={(value) =>
-                              update("totalSessions", value)
-                            }
-                          />
-                        </Field>
-                      </div>
-
-                      <Field label="روزهای هفته">
-                        <WeekdaysPicker
-                          value={form.weekdays}
-                          onChange={(value) => update("weekdays", value)}
-                        />
-                      </Field>
-
-                      {form.weekdays.length > 0 && requestedTotal > 0 && (
-                        <p className="rounded-lg bg-muted/60 p-3 text-sm text-muted-foreground">
-                          هفته‌ای {toFa(form.weekdays.length)} جلسه (
-                          {selectedWeekdayLabels}) در حدود {toFa(weeksCount)}{" "}
-                          هفته
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {sessions.length > 0 && (
-                    <div className="space-y-2.5 rounded-lg border bg-background p-3">
-                      <div className="flex items-center gap-2 text-sm font-semibold">
-                        <ListChecks className="size-4 text-primary" />
-                        پیش‌نمایش {toFa(sessions.length)} جلسه
-                      </div>
-                      <ul className="flex max-h-40 flex-wrap gap-2 overflow-y-auto">
-                        {sessions.map((date, index) => (
-                          <li
-                            key={date.toISOString()}
-                            className="rounded-lg bg-primary/10 px-2.5 py-1 text-xs text-primary"
-                          >
-                            {`${toFa(index + 1)}. ${form.time
-                              ? formatNumericDateTime(
-                                combineDateAndTime(date, form.time)
-                              )
-                              : formatSession(date)
-                              }`}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </Panel>
-
-                <Panel icon={StickyNote} title="یادداشت نوبت">
-                  <Textarea
-                    id="appointment-notes"
-                    aria-label="یادداشت نوبت"
-                    placeholder="توضیحات مربوط به این رزرو..."
-                    value={form.notes}
-                    onChange={(event) => update("notes", event.target.value)}
-                    rows={3}
-                    maxLength={2000}
-                    className="resize-none rounded-lg bg-background"
-                  />
-                </Panel>
-              </div>
+              {/* 4 — Notes */}
+              <Step index={4} icon={StickyNote} title="یادداشت" hint="اختیاری">
+                <Textarea
+                  id="appointment-notes"
+                  aria-label="یادداشت نوبت"
+                  placeholder="توضیحات مربوط به این رزرو..."
+                  value={form.notes}
+                  onChange={(event) => update("notes", event.target.value)}
+                  rows={3}
+                  maxLength={2000}
+                  className="resize-none rounded-lg bg-background"
+                />
+              </Step>
             </div>
           </div>
 
-          <Separator />
-
-          <DialogFooter className="shrink-0 flex-col-reverse items-stretch gap-3 bg-card p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <div className="flex gap-2">
-              <Button
-                type="submit"
-                disabled={loading}
-                className="h-11 flex-1 rounded-lg px-6 sm:flex-none"
+          <footer className="shrink-0 border-t bg-card">
+            {error && (
+              <div
+                role="alert"
+                className="flex items-center gap-2 border-b border-destructive/20 bg-destructive/10 px-4 py-2.5 text-sm text-destructive sm:px-6"
               >
-                <CalendarRange className="size-4" />
-                {loading
-                  ? "در حال ثبت..."
-                  : sessions.length > 1
-                    ? `ثبت ${toFa(sessions.length)} جلسه`
-                    : "ثبت نوبت"}
-              </Button>
-              <DialogClose
-                render={
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={loading}
-                    className="h-11 rounded-lg"
-                  >
-                    انصراف
-                  </Button>
-                }
-              />
-              {error && (
-                <div
-                  role="alert"
-                  className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
-                >
-                  {error}
-                </div>
-              )}
-            </div>
+                <AlertCircle className="size-4 shrink-0" />
+                {error}
+              </div>
+            )}
 
-            {sessions.length > 0 && (
-              <div className="flex items-center gap-3 rounded-lg bg-muted/60 px-4 py-2 sm:ms-auto">
-                <Wallet className="size-5 shrink-0 text-primary" />
+            <div className="flex flex-col-reverse gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <div className="flex gap-2">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="h-11 flex-1 rounded-lg px-8 sm:flex-none"
+                >
+                  {loading ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <CalendarCheck2 className="size-4" />
+                  )}
+                  {submitLabel}
+                </Button>
+                <DialogClose
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={loading}
+                      className="h-11 rounded-lg px-5"
+                    >
+                      انصراف
+                    </Button>
+                  }
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Wallet className="size-4" />
+                </span>
                 <div className="text-xs leading-5 text-muted-foreground">
-                  <div>
-                    {toFa(appointmentPrice)} تومان × {toFa(sessions.length)}{" "}
-                    جلسه
+                  <div className="tabular-nums">
+                    {toFa(appointmentPrice)} تومان × {toFa(Math.max(sessions.length, 1))} جلسه
                   </div>
-                  <div className="text-sm font-semibold text-foreground">
-                    مجموع: {toFa(appointmentPrice * sessions.length)} تومان
+                  <div className="text-sm font-bold text-foreground tabular-nums">
+                    مجموع: {toFa(appointmentPrice * Math.max(sessions.length, 1))} تومان
                   </div>
                 </div>
               </div>
-            )}
-          </DialogFooter>
+            </div>
+          </footer>
         </form>
       </DialogContent>
     </Dialog>

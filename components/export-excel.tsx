@@ -153,13 +153,12 @@ export function ExportExcelButton() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-<Button
-        type="button"
-        size="sm"
-        variant="outline"
-        className="bg-card"
-      >
-        <FileSpreadsheet className="size-4" />
+          <Button
+            type="button"
+            variant="outline"
+            className="bg-card"
+          >
+            <FileSpreadsheet className="size-4" />
             دریافت خروجی اکسل
           </Button>
         }
@@ -241,7 +240,7 @@ export function ExportExcelButton() {
           )}
         </div>
 
-        <DialogFooter className="shrink-0 flex-col-reverse items-stretch gap-2 border-t p-4 sm:flex-row sm:justify-start">
+        <DialogFooter className="grid grid-cols-2 px-2 pb-3">
           <Button
             type="button"
             disabled={loading}

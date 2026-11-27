@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PersianNumberInput } from "@/components/persian-number-input"
+import { useToast } from "@/components/ui/toast"
 import {
   Dialog,
   DialogContent,
@@ -33,9 +34,9 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 export default function CustomersPage() {
+  const toast = useToast()
   const [customers, setCustomers] = useState<CustomerListRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState<string | null>(null)
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerListRow | null>(null)
   const [sessions, setSessions] = useState<AppointmentRow[]>([])
@@ -60,12 +61,11 @@ export default function CustomersPage() {
       .then((rows) => {
         if (active) {
           setCustomers(rows)
-          setLoadError(null)
         }
       })
       .catch((error) => {
         if (active) {
-          setLoadError(
+          toast.error(
             error instanceof Error
               ? error.message
               : "بارگیری مشتریان ناموفق بود."
@@ -79,7 +79,7 @@ export default function CustomersPage() {
     return () => {
       active = false
     }
-  }, [])
+  }, [toast])
 
   const openDetails = (customer: CustomerListRow) => {
     const currentRequest = ++requestId.current
@@ -146,6 +146,7 @@ export default function CustomersPage() {
       const rows = await deleteCustomer(selectedCustomer.id)
       setCustomers(rows)
       closeDetails(false)
+      toast.success("مشتری حذف شد.")
     } catch (error) {
       setCustomerError(
         error instanceof Error ? error.message : "حذف مشتری ناموفق بود."
@@ -175,6 +176,7 @@ export default function CustomersPage() {
         setCustomers(rows)
       }
       setEditingCustomer(false)
+      toast.success("اطلاعات مشتری ذخیره شد.")
     } catch (error) {
       setCustomerError(
         error instanceof Error ? error.message : "ویرایش مشتری ناموفق بود."
@@ -188,9 +190,9 @@ export default function CustomersPage() {
     setLoading(true)
     try {
       setCustomers(await listAllCustomers())
-      setLoadError(null)
+      toast.success("فهرست مشتریان به‌روزرسانی شد.")
     } catch (error) {
-      setLoadError(
+      toast.error(
         error instanceof Error ? error.message : "بارگیری مشتریان ناموفق بود."
       )
     } finally {
@@ -214,6 +216,7 @@ export default function CustomersPage() {
         current.filter((appointment) => appointment.id !== session.id)
       )
       setCustomers(await listAllCustomers())
+      toast.success("جلسه حذف شد.")
     } catch (error) {
       setSessionsError(
         error instanceof Error ? error.message : "حذف نوبت ناموفق بود."
@@ -312,15 +315,6 @@ export default function CustomersPage() {
           نوسازی
         </Button>
       </section>
-
-      {loadError && (
-        <p
-          role="alert"
-          className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
-        >
-          {loadError}
-        </p>
-      )}
 
       <DataTable
         columns={columns}

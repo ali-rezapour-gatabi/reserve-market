@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 import { toFa } from "@/lib/jalali"
+import { Input } from "./ui/input"
 
 export type SortDir = "asc" | "desc"
 
@@ -154,7 +155,7 @@ export function DataTable<TData>({
       {(enableSearch || toolbar) && (
         <div className="flex flex-wrap items-center justify-between gap-3">
           {enableSearch && (
-            <input
+            <Input
               value={query}
               onChange={(event) => {
                 setPage(0)
@@ -162,14 +163,14 @@ export function DataTable<TData>({
               }}
               placeholder={searchPlaceholder}
               dir="rtl"
-              className="h-11 w-full max-w-xs rounded-xl border border-border/70 bg-background px-3 text-sm transition-[color,box-shadow,background-color] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+              className="h-12 w-full max-w-md border border-border/70 bg-background px-3 text-sm transition-[color,box-shadow,background-color] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
             />
           )}
           {toolbar && <div className="flex items-center gap-2">{toolbar}</div>}
         </div>
       )}
 
-      <div className="rounded-2xl border border-border/70 bg-card shadow-sm shadow-foreground/[0.02]">
+      <div className="rounded-md border border-border/70 bg-card shadow-sm shadow-foreground/[0.02]">
         <Table>
           <TableHeader>
             <TableRow>
@@ -225,17 +226,17 @@ export function DataTable<TData>({
                   onKeyDown={
                     onRowClick
                       ? (event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault()
-                            onRowClick(row)
-                          }
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault()
+                          onRowClick(row)
                         }
+                      }
                       : undefined
                   }
                   tabIndex={onRowClick ? 0 : undefined}
                   className={cn(
                     onRowClick &&
-                      "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     getRowClassName?.(row)
                   )}
                 >
