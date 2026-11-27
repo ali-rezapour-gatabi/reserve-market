@@ -10,9 +10,17 @@ import {
   ChevronUp,
 } from "lucide-react"
 
+import { JalaliCalendar } from "@/components/jalali-calendar"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import {
+  formatNumericDate,
   formatNumericMonth,
   jalaliParts,
   startOfJalaliMonth,
@@ -40,6 +48,7 @@ export function DayStrip({ selected, onSelect, className }: DayStripProps) {
   const today = useLocalDay()
   const [monthStartOverride, setMonthStartOverride] = useState<Date | null>(null)
   const [monthExpanded, setMonthExpanded] = useState(false)
+  const [mobileCalendarOpen, setMobileCalendarOpen] = useState(false)
   const monthStart =
     monthStartOverride ?? startOfJalaliMonth(today)
 
@@ -173,7 +182,7 @@ export function DayStrip({ selected, onSelect, className }: DayStripProps) {
         className
       )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
+      <div className="hidden flex-wrap items-center justify-between gap-3 border-b px-4 py-3 md:flex">
         <div className="flex items-center gap-3">
           <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <CalendarDays className="size-4" />
@@ -212,6 +221,36 @@ export function DayStrip({ selected, onSelect, className }: DayStripProps) {
           </div>
         </div>
       </div>
+
+      <div className="border-b px-3 py-2.5 md:hidden">
+        <button
+          type="button"
+          aria-label={`انتخاب تاریخ ${formatNumericDate(selected ?? today)}`}
+          aria-haspopup="dialog"
+          aria-expanded={mobileCalendarOpen}
+          onClick={() => setMobileCalendarOpen(true)}
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border bg-background px-4 text-sm font-semibold tabular-nums outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <CalendarDays className="size-4 text-primary" aria-hidden="true" />
+          <span>{formatNumericDate(selected ?? today)}</span>
+        </button>
+      </div>
+
+      <Dialog open={mobileCalendarOpen} onOpenChange={setMobileCalendarOpen}>
+        <DialogContent dir="rtl" className="max-w-sm gap-4">
+          <DialogHeader>
+            <DialogTitle>انتخاب تاریخ</DialogTitle>
+          </DialogHeader>
+          <JalaliCalendar
+            selected={selected ? [selected] : []}
+            initialMonth={selected ?? today}
+            onSelect={(day) => {
+              handleSelectDay(day)
+              setMobileCalendarOpen(false)
+            }}
+          />
+        </DialogContent>
+      </Dialog>
 
       <div className="hidden border-b px-4 py-4 md:block lg:hidden">
         <div className="mb-3 flex items-center justify-between">
@@ -286,7 +325,7 @@ export function DayStrip({ selected, onSelect, className }: DayStripProps) {
 
       <div
         ref={scrollRef}
-        className="flex gap-2 overflow-x-auto px-4 py-5 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40 md:hidden lg:flex"
+        className="hidden gap-2 overflow-x-auto px-4 py-5 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40 md:hidden lg:flex"
         aria-label="روزهای ماه"
       >
         {days.map((day) => renderDay(day, true))}
