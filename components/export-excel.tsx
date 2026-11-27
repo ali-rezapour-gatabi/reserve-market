@@ -157,7 +157,7 @@ export function ExportExcelButton() {
         type="button"
         size="sm"
         variant="outline"
-        className="border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+        className="bg-card"
       >
         <FileSpreadsheet className="size-4" />
             دریافت خروجی اکسل

@@ -509,18 +509,15 @@ export default function DashboardPage() {
   return (
     <>
       <div className="animate-in space-y-5 duration-500 fade-in-0 sm:space-y-6">
-        <section className="relative isolate overflow-hidden rounded-3xl bg-primary px-5 py-5 text-primary-foreground shadow-lg shadow-primary/10 sm:px-8 sm:py-8">
-          <div className="pointer-events-none absolute -start-12 -top-24 -z-10 size-64 rounded-full border border-white/10" />
-          <div className="pointer-events-none absolute -start-2 -top-14 -z-10 size-44 rounded-full border border-white/10" />
-          <div className="relative flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-            <div>
-              <p className="text-xs font-medium text-primary-foreground/75">
+        <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+              <p className="text-xs font-medium text-muted-foreground">
                 {isSameDay(selectedDay, new Date()) ? "امروز" : weekdayName(selectedDay)}
                 <span className="px-1.5">·</span>
                 {formatNumericDate(selectedDay)}
               </p>
               <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl xl:text-4xl">روزتان بخیر</h1>
-              <p className="mt-2 max-w-md text-sm leading-6 text-primary-foreground/80">
+              <p className="mt-1 max-w-md text-sm text-muted-foreground">
                 نمای کلی نوبت‌ها و عملکرد مرکز شما در یک نگاه.
               </p>
             </div>
@@ -529,7 +526,7 @@ export default function DashboardPage() {
                 type="button"
                 size="icon"
                 variant="outline"
-                className="border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                className="bg-card"
                 onClick={bumpRevision}
                 aria-label="نوسازی نوبت‌ها"
                 title="نوسازی نوبت‌ها"
@@ -541,10 +538,8 @@ export default function DashboardPage() {
                 services={services}
                 therapists={therapists}
                 onCreate={handleCreate}
-                triggerClassName="bg-white text-primary hover:bg-white/90"
               />
             </div>
-          </div>
         </section>
 
         <section aria-label="خلاصه نوبت‌های روز" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
