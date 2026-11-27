@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# اطلس ماساژ — نسخه وب
 
-## Getting Started
+بازنویسی وب پروژه `reserved-market` با Next.js. نسخه دسکتاپ از Tauri و
+`@tauri-apps/plugin-sql` استفاده می‌کرد؛ در این نسخه تمام قابلیت‌ها روی وب
+اجرا می‌شوند و داده‌ها در یک پایگاه داده SQLite سمت سرور نگهداری می‌شوند.
 
-First, run the development server:
+## اجرا
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+سپس [http://localhost:3000](http://localhost:3000) را باز کنید.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+ساخت نسخه production:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## معماری
 
-To learn more about Next.js, take a look at the following resources:
+- رابط کاربری در `app/` و `components/` قرار دارد و همان تجربه نسخه دسکتاپ را
+  با تقویم جلالی، ثبت نوبت، مشتریان، خدمات و متخصص‌ها ارائه می‌کند.
+- عملیات داده از طریق `lib/repositories.ts` به مسیر `POST /api/rpc` ارسال
+  می‌شود. این مسیر درخواست را به توابع `lib/server/repository.ts` هدایت می‌کند.
+- پایگاه داده با `better-sqlite3` در `lib/server/db.ts` ساخته و مقداردهی اولیه
+  می‌شود. جدول‌ها در اولین درخواست به‌صورت خودکار ایجاد می‌شوند.
+- خروجی اکسل کاملاً در مرورگر ساخته و دانلود می‌شود.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## پایگاه داده
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+به‌صورت پیش‌فرض فایل پایگاه داده در مسیر `data/massage.db` ساخته می‌شود. برای
+تغییر مسیر، متغیر محیطی `DATABASE_PATH` را تنظیم کنید:
 
-## Deploy on Vercel
+```bash
+DATABASE_PATH=/var/lib/massage/massage.db npm start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+پوشه `data/` در git نادیده گرفته می‌شود.
