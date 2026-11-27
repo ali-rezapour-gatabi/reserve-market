@@ -2,7 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { addDays, isSameDay } from "date-fns"
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react"
+import {
+  CalendarDays,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -15,6 +21,7 @@ import {
 import { useLocalDay } from "@/lib/use-local-day"
 
 const WEEKDAY_SHORT_BY_DAY = ["ی", "د", "س", "چ", "پ", "ج", "ش"]
+const WEEKDAY_SHORT_SATURDAY_FIRST = ["ش", "ی", "د", "س", "چ", "پ", "ج"]
 
 function jalaliMonthLength(monthStart: Date) {
   const { jm } = jalaliParts(monthStart)
@@ -32,6 +39,7 @@ type DayStripProps = {
 export function DayStrip({ selected, onSelect, className }: DayStripProps) {
   const today = useLocalDay()
   const [monthStartOverride, setMonthStartOverride] = useState<Date | null>(null)
+  const [monthExpanded, setMonthExpanded] = useState(false)
   const monthStart =
     monthStartOverride ?? startOfJalaliMonth(today)
 
@@ -41,8 +49,48 @@ export function DayStrip({ selected, onSelect, className }: DayStripProps) {
     () => Array.from({ length: monthLength }, (_, i) => addDays(monthStart, i)),
     [monthStart, monthLength]
   )
+  const monthParts = jalaliParts(monthStart)
+  const firstWeekday = (monthStart.getDay() + 1) % 7
+  const weeks = useMemo(
+    () =>
+      Array.from(
+        { length: Math.ceil((monthLength + firstWeekday) / 7) },
+        (_, weekIndex) =>
+          Array.from({ length: 7 }, (_, weekdayIndex) =>
+            addDays(monthStart, weekIndex * 7 + weekdayIndex - firstWeekday)
+          )
+      ),
+    [firstWeekday, monthLength, monthStart]
+  )
+  const selectedParts = selected ? jalaliParts(selected) : null
+  const anchorDay =
+    selectedParts?.jy === monthParts.jy && selectedParts.jm === monthParts.jm
+      ? selectedParts.jd
+      : jalaliParts(today).jy === monthParts.jy &&
+          jalaliParts(today).jm === monthParts.jm
+        ? jalaliParts(today).jd
+        : 1
+  const activeWeekIndex = Math.floor((firstWeekday + anchorDay - 1) / 7)
+  const activeWeek = weeks[activeWeekIndex] ?? weeks[0]
+  const { jy, jm } = monthParts
 
-  const { jy, jm } = jalaliParts(monthStart)
+  const handleSelectDay = (day: Date) => {
+    const parts = jalaliParts(day)
+    if (parts.jy !== jy || parts.jm !== jm) {
+      setMonthStartOverride(startOfJalaliMonth(day))
+    }
+    setMonthExpanded(false)
+    onSelect(day)
+  }
+
+  const changeWeek = (amount: number) => {
+    const weekStart = activeWeek?.[0]
+    if (!weekStart) return
+
+    const target = addDays(weekStart, amount * 7)
+    setMonthStartOverride(startOfJalaliMonth(target))
+    onSelect(target)
+  }
 
   const scrollRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -64,13 +112,58 @@ export function DayStrip({ selected, onSelect, className }: DayStripProps) {
     })
   }, [monthStart, selected])
 
-  const goNext = () =>
+  const goNext = () => {
+    setMonthExpanded(false)
     setMonthStartOverride(startOfJalaliMonth(addDays(monthStart, monthLength)))
-  const goPrev = () =>
+  }
+  const goPrev = () => {
+    setMonthExpanded(false)
     setMonthStartOverride(startOfJalaliMonth(addDays(monthStart, -1)))
+  }
   const goToday = () => {
     setMonthStartOverride(null)
+    setMonthExpanded(false)
     onSelect(today)
+  }
+
+  const renderDay = (day: Date, inCurrentMonth: boolean, tablet = false) => {
+    const { jd, jy: dayYear, jm: dayMonth } = jalaliParts(day)
+    const isToday = isSameDay(day, today)
+    const isSelected = selected !== null && isSameDay(day, selected)
+    const isPast = day < today
+    const monthLabel = formatNumericMonth(dayYear, dayMonth)
+
+    return (
+      <button
+        key={day.toISOString()}
+        type="button"
+        aria-pressed={isSelected}
+        data-today={isToday}
+        aria-label={`${WEEKDAY_SHORT_BY_DAY[day.getDay()]}، ${toFa(jd)} ${monthLabel}`}
+        onClick={() => handleSelectDay(day)}
+        className={cn(
+          "flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          tablet
+            ? "min-w-0 rounded-lg px-1 py-2"
+            : "h-16 w-14 shrink-0 rounded-lg",
+          isSelected
+            ? "border-primary bg-primary font-medium text-primary-foreground shadow-sm"
+            : "border-transparent bg-muted/50 hover:bg-muted",
+          isPast && !isSelected && "opacity-60",
+          !inCurrentMonth && !isSelected && "opacity-35",
+          isToday &&
+            !isSelected &&
+            "border-secondary bg-secondary/30 font-medium text-secondary-foreground opacity-100"
+        )}
+      >
+        <span className="text-[11px] leading-none opacity-80">
+          {WEEKDAY_SHORT_BY_DAY[day.getDay()]}
+        </span>
+        <span className={cn("leading-none tabular-nums", tablet ? "text-base" : "text-lg")}>
+          {toFa(jd)}
+        </span>
+      </button>
+    )
   }
 
   return (
@@ -120,52 +213,83 @@ export function DayStrip({ selected, onSelect, className }: DayStripProps) {
         </div>
       </div>
 
+      <div className="hidden border-b px-4 py-4 md:block lg:hidden">
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-xs font-medium text-muted-foreground">
+            هفته {toFa(activeWeekIndex + 1)} از {toFa(weeks.length)}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="ghost"
+              onClick={() => changeWeek(-1)}
+              aria-label="هفته قبل"
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="ghost"
+              onClick={() => changeWeek(1)}
+              aria-label="هفته بعد"
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="grid grid-cols-7 gap-2" role="group" aria-label="روزهای این هفته">
+          {activeWeek?.map((day) => {
+            const parts = jalaliParts(day)
+            return renderDay(day, parts.jy === jy && parts.jm === jm, true)
+          })}
+        </div>
+
+        <button
+          type="button"
+          aria-expanded={monthExpanded}
+          aria-controls="tablet-month-grid"
+          onClick={() => setMonthExpanded((expanded) => !expanded)}
+          className="mt-3 flex w-full items-center justify-between rounded-lg border-t px-1 pt-3 text-sm font-medium text-primary outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span>{monthExpanded ? "بستن تقویم ماه" : "نمایش همهٔ روزهای ماه"}</span>
+          {monthExpanded ? (
+            <ChevronUp className="size-4" aria-hidden="true" />
+          ) : (
+            <ChevronDown className="size-4" aria-hidden="true" />
+          )}
+        </button>
+
+        <div
+          id="tablet-month-grid"
+          hidden={!monthExpanded}
+          className="mt-3 rounded-lg bg-muted/30 p-3"
+        >
+          <div className="mb-2 grid grid-cols-7 text-center text-[11px] font-medium text-muted-foreground">
+            {WEEKDAY_SHORT_SATURDAY_FIRST.map((weekday, index) => (
+              <span key={`${weekday}-${index}`} className="py-1">
+                {weekday}
+              </span>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1.5">
+            {weeks.flatMap((week) =>
+              week.map((day) => {
+                const parts = jalaliParts(day)
+                return renderDay(day, parts.jy === jy && parts.jm === jm, true)
+              })
+            )}
+          </div>
+        </div>
+      </div>
+
       <div
         ref={scrollRef}
-        className="
-      flex gap-2 overflow-x-auto px-4 py-5
-      scrollbar-thin
-      scrollbar-thumb-primary/20
-      scrollbar-track-transparent
-      hover:scrollbar-thumb-primary/40
-    "
+        className="flex gap-2 overflow-x-auto px-4 py-5 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40 md:hidden lg:flex"
         aria-label="روزهای ماه"
       >
-        {days.map((day) => {
-          const { jd } = jalaliParts(day)
-          const isToday = isSameDay(day, today)
-          const isSelected = selected !== null && isSameDay(day, selected)
-          const isPast = day < today
-
-          return (
-            <button
-              key={day.toISOString()}
-              type="button"
-              aria-pressed={isSelected}
-              data-today={isToday}
-              aria-label={`${WEEKDAY_SHORT_BY_DAY[day.getDay()]}، ${toFa(jd)} ${formatNumericMonth(jy, jm)}`}
-              onClick={() => onSelect(day)}
-              className={cn(
-                "flex h-16 w-14 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border text-sm transition-colors outline-none",
-                "focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
-                isSelected
-                  ? "border-primary bg-primary font-medium text-primary-foreground shadow-sm"
-                  : "border-transparent bg-muted/50 hover:bg-muted",
-                isPast && !isSelected && "opacity-60",
-                isToday &&
-                !isSelected &&
-                "border-secondary bg-secondary/30 font-medium text-secondary-foreground opacity-100"
-              )}
-            >
-              <span className="text-[11px] leading-none opacity-80">
-                {WEEKDAY_SHORT_BY_DAY[day.getDay()]}
-              </span>
-              <span className="text-lg leading-none tabular-nums">
-                {toFa(jd)}
-              </span>
-            </button>
-          )
-        })}
+        {days.map((day) => renderDay(day, true))}
       </div>
     </section>
   )
